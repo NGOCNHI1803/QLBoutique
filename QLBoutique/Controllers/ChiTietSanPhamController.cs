@@ -128,6 +128,22 @@ namespace QLBoutique.Controllers
 
             return Ok(list);
         }
+        // GET: api/ChiTietSanPham/sanpham/{maSanPham}
+        [HttpGet("sanpham/{maSanPham}")]
+        public async Task<ActionResult<IEnumerable<ChiTietSanPham>>> GetChiTietTheoMaSanPham(int maSanPham)
+        {
+            var danhSachChiTiet = await _context.ChiTietSanPham
+                .Where(ct => ct.MaSanPham == maSanPham && !ct.isDeleted)
+                .ToListAsync();
+
+            if (danhSachChiTiet == null || danhSachChiTiet.Count == 0)
+            {
+                return NotFound("Không tìm thấy chi tiết sản phẩm với mã sản phẩm đã cho.");
+            }
+
+            return Ok(danhSachChiTiet);
+        }
+
 
     }
 }

@@ -104,5 +104,23 @@ namespace QLBoutique.Controllers
         {
             return _context.SanPham.Any(sp => sp.MaSanPham == id && !sp.isDeleted);
         }
+
+        // GET: api/SanPham/loai/5
+        [HttpGet("loai/{maLoaiSP}")]
+        public async Task<ActionResult<IEnumerable<SanPham>>> GetSanPhamTheoLoaiSP(int maLoaiSP)
+        {
+            var danhSach = await _context.SanPham
+                                         .Where(sp => sp.MaLoai == maLoaiSP && !sp.isDeleted)
+                                         .ToListAsync();
+
+            if (danhSach == null || !danhSach.Any())
+            {
+                return NotFound("Không tìm thấy sản phẩm thuộc loại này.");
+            }
+
+            return Ok(danhSach);
+        }
+
+
     }
 }
