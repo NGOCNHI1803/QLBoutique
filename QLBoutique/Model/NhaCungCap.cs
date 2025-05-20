@@ -1,25 +1,12 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
-namespace QLBoutique.Model
+﻿namespace QLBoutique.Model
 {
-    
     public class NhaCungCap
     {
-        [Key]
-        [Column("MaNCC")]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // Tự động tăng (AUTO_INCREMENT)
-        public int MaNCC { get; set; }
-
-        [Required]
-        [Column("TenNCC")]
-        [StringLength(150)]
-        public string TenNCC { get; set; } = null!;
-
-        [Required]
-        [Column("ThongTinLienHe")]
-        [StringLength(150)]
-        public string ThongTinLienHe { get; set; } = null!;
+        public string? MaNCC { get; set; }       // MANCC - khóa chính
+        public string? TenNCC { get; set; }      // TENNCC
+        public string DiaChi { get; set; } = ""; // DIACHI - NOT NULL nên cần khởi tạo
+        public string? SDT { get; set; }         // SDT - có thể null
+        public string? Email { get; set; }       // EMAIL - có thể null
+        public int TrangThai { get; set; } = 1;  // TRANGTHAI - mặc định là 1
     }
 }

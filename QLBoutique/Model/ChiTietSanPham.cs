@@ -7,47 +7,49 @@ namespace QLBoutique.Model
 {
     public class ChiTietSanPham
     {
-        public int? MaChiTiet { get; set; } // Mã chi tiết sản phẩm
+        [Key]
+        [StringLength(20)]
+        public string? MaBienThe { get; set; } // MABIEN_THE - khóa chính
 
-        public int? MaSanPham { get; set; } // Mã sản phẩm
+        [Required]
+        [StringLength(20)]
+        public string? MaSanPham { get; set; } // MASP - khóa ngoại
 
-        public int? MaLoaiSP { get; set; } // Mã loại sản phẩm
+        [Required]
+        [StringLength(10)]
+        public string? Size { get; set; } // SIZE
 
-        public string? MaSKU { get; set; } // Mã SKU
+        [Required]
+        [StringLength(20)]
+        public string? MauSac { get; set; } // MAUSAC
 
-        public string? MoTa { get; set; } // Mô tả
+        [Column(TypeName = "TEXT")]
+        public string? HinhAnh { get; set; } // HINHANH
 
-        public string? MauSac { get; set; } // Màu sắc
+        [StringLength(30)]
+        public string? Barcode { get; set; } // BARCODE
 
-        public string? KichCo { get; set; } // Kích cỡ
+        [Column(TypeName = "decimal(15,2)")]
+        public decimal? GiaVon { get; set; } // GIA_VON
 
-        public string? ChatLieu { get; set; } // Chất liệu
+        [Column(TypeName = "decimal(15,2)")]
+        public decimal? GiaBan { get; set; } // GIA_BAN
 
-        public string? DacTinh { get; set; } // Đặc tính
+        public int TonKho { get; set; } = 0; // TON_KHO
 
-        public string? Form { get; set; } // Form dáng
+        public float? TrongLuong { get; set; } // TRONGLUONG
 
-        public int? Gia { get; set; } // Giá bán
+        public int TrangThai { get; set; } = 1; // TRANGTHAI
 
-        public int? SoLuong { get; set; } // Số lượng tồn kho
-
-        public string? HinhAnh { get; set; } // Đường dẫn ảnh
-
-        public bool isDeleted { get; set; } = false;
 
         [NotMapped]
         public string? HinhAnhUrl => string.IsNullOrEmpty(HinhAnh)
             ? null
             : $"https://localhost:7265/images/{HinhAnh}";
 
-        // Navigation Property - liên kết với bảng SanPham
+        // Navigation property liên kết bảng SanPham
         [ForeignKey("MaSanPham")]
         [JsonIgnore]
         public SanPham? SanPham { get; set; }
-
-        // Navigation Property - liên kết với bảng LoaiSanPham
-        [ForeignKey("MaLoaiSP")]
-        [JsonIgnore]
-        public LoaiSanPham? LoaiSanPham { get; set; }
     }
 }

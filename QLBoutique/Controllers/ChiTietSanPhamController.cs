@@ -1,5 +1,4 @@
-﻿using LabManagement.Model;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QLBoutique.ClothingDbContext;
 using QLBoutique.Model;
@@ -12,138 +11,162 @@ namespace QLBoutique.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ChiTietSanPhamController : ControllerBase
+    public class BienTheSanPhamController : ControllerBase
     {
         private readonly BoutiqueDBContext _context;
 
-        private static readonly string ImageDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "ChiTietSanPham");
-        private const string ImageBaseUrl = "https://localhost:7265/images";
+        // Thư mục lưu hình (tương đối với root project, ví dụ: wwwroot/images/BienTheSanPham)
+        private static readonly string ImageDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images");
+        // URL cơ sở để trả về client (thay bằng domain + port của bạn)
+        private const string ImageBaseUrl = "https://localhost:7265/Images";
 
-        public ChiTietSanPhamController(BoutiqueDBContext context)
+        public BienTheSanPhamController(BoutiqueDBContext context)
         {
             _context = context;
         }
 
-        // GET: api/ChiTietSanPham
+        // GET: api/BienTheSanPham
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ChiTietSanPham>>> GetChiTietSanPhams()
+        public async Task<ActionResult<IEnumerable<ChiTietSanPham>>> GetAll()
         {
-            return await _context.ChiTietSanPham
-                                 .Where(sp => !sp.isDeleted)
-                                 .ToListAsync();
+            var list = await _context.ChiTietSanPham.AsNoTracking().ToListAsync();
+
+            //// Đưa đường dẫn hình ảnh về dạng URL
+            //list.ForEach(item =>
+            //{
+            //    if (!string.IsNullOrEmpty(item.HinhAnh))
+            //    {
+            //        string imagePath = Path.Combine(ImageDirectory, item.HinhAnh);
+            //        if (System.IO.File.Exists(imagePath))
+            //        {
+            //            item.HinhAnh = $"{ImageBaseUrl}/{item.HinhAnh}";
+            //        }
+            //        else
+            //        {
+            //            item.HinhAnh = null; // hoặc giá trị mặc định nếu file không tồn tại
+            //        }
+            //    }
+            //});
+
+            return list;
         }
 
-        // GET: api/ChiTietSanPham/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<ChiTietSanPham>> GetChiTietSanPham(int id)
+        // GET: api/BienTheSanPham/{mabienthe}
+        [HttpGet("{mabienthe}")]
+        public async Task<ActionResult<ChiTietSanPham>> GetById(string mabienthe)
         {
-            var sp = await _context.ChiTietSanPham.FindAsync(id);
-
-            if (sp == null || sp.isDeleted)
-            {
+            var item = await _context.ChiTietSanPham.FindAsync(mabienthe);
+            if (item == null)
                 return NotFound();
-            }
 
-            return sp;
+            return item;
         }
 
-        // POST: api/ChiTietSanPham
+        // POST: api/BienTheSanPham
         [HttpPost]
-        public async Task<ActionResult<ChiTietSanPham>> PostChiTietSanPham([FromBody] ChiTietSanPham chiTiet)
+        public async Task<ActionResult<ChiTietSanPham>> Post(ChiTietSanPham newItem)
         {
-            _context.ChiTietSanPham.Add(chiTiet);
+            if (!string.IsNullOrEmpty(newItem.HinhAnh))
+            {
+                string fullImagePath = Path.Combine(ImageDirectory, newItem.HinhAnh);
+                if (!System.IO.File.Exists(fullImagePath))
+                    return BadRequest("Hình ảnh không tồn tại trong thư mục lưu trữ.");
+            }
+
+            bool exists = await _context.ChiTietSanPham.AnyAsync(c => c.MaBienThe == newItem.MaBienThe);
+            if (exists)
+                return Conflict("Mã biến thể đã tồn tại.");
+
+            _context.ChiTietSanPham.Add(newItem);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetChiTietSanPham), new { id = chiTiet.MaChiTiet }, chiTiet);
+            return CreatedAtAction(nameof(GetById), new { mabienthe = newItem.MaBienThe }, newItem);
         }
 
-        // PUT: api/ChiTietSanPham/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutChiTietSanPham(int id, [FromBody] ChiTietSanPham chiTiet)
+        // PUT: api/BienTheSanPham/{mabienthe}
+        [HttpPut("{mabienthe}")]
+        public async Task<IActionResult> Put(string mabienthe, ChiTietSanPham updatedItem)
         {
-            if (id != chiTiet.MaChiTiet)
-                return BadRequest();
+            if (mabienthe != updatedItem.MaBienThe)
+                return BadRequest("Mã biến thể không khớp.");
 
-            var existing = await _context.ChiTietSanPham.FindAsync(id);
-            if (existing == null || existing.isDeleted)
+            var existItem = await _context.ChiTietSanPham.FindAsync(mabienthe);
+            if (existItem == null)
                 return NotFound();
 
-            // Update fields
-            _context.Entry(existing).CurrentValues.SetValues(chiTiet);
+            if (!string.IsNullOrEmpty(updatedItem.HinhAnh))
+            {
+                string fullImagePath = Path.Combine(ImageDirectory, updatedItem.HinhAnh);
+                if (!System.IO.File.Exists(fullImagePath))
+                    return BadRequest("Hình ảnh không tồn tại trong thư mục lưu trữ.");
+            }
+
+            // Cập nhật tất cả thuộc tính hoặc từng thuộc tính cần thiết
+            _context.Entry(existItem).CurrentValues.SetValues(updatedItem);
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await ChiTietSanPhamExists(mabienthe))
+                    return NotFound();
+                else
+                    throw;
+            }
+
+            return NoContent();
+        }
+
+        // DELETE: api/BienTheSanPham/{mabienthe}
+        [HttpDelete("{mabienthe}")]
+        public async Task<IActionResult> Delete(string mabienthe)
+        {
+            var item = await _context.ChiTietSanPham.FindAsync(mabienthe);
+            if (item == null)
+                return NotFound();
+
+            _context.ChiTietSanPham.Remove(item);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // DELETE: api/ChiTietSanPham/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteChiTietSanPham(int id)
+        private async Task<bool> ChiTietSanPhamExists(string mabienthe)
         {
-            var sp = await _context.ChiTietSanPham.FindAsync(id);
-            if (sp == null || sp.isDeleted)
-                return NotFound();
-
-            sp.isDeleted = true;
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return await _context.ChiTietSanPham.AnyAsync(e => e.MaBienThe == mabienthe);
         }
 
-        // Upload hình ảnh
-        [HttpPost("upload")]
-        public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
+        // Tìm kiếm theo mã sản phẩm MASP
+        // GET: api/BienTheSanPham/search?masp=xxx
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<ChiTietSanPham>>> SearchByMaSP([FromQuery] string masp)
         {
-            if (file == null || file.Length == 0)
-                return BadRequest("File không hợp lệ");
+            if (string.IsNullOrEmpty(masp))
+                return BadRequest("Bạn phải cung cấp mã sản phẩm (masp).");
 
-            if (!Directory.Exists(ImageDirectory))
-            {
-                Directory.CreateDirectory(ImageDirectory);
-            }
-
-            var fileName = $"{Path.GetFileNameWithoutExtension(Path.GetRandomFileName())}_{Path.GetFileName(file.FileName)}";
-            var filePath = Path.Combine(ImageDirectory, fileName);
-
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var imageUrl = $"{ImageBaseUrl}/{fileName}";
-            return Ok(new { imageUrl, fileName });
-        }
-
-        // GET: api/ChiTietSanPham/loai/{maLoaiSP}
-        [HttpGet("loai/{maLoaiSP}")]
-        public async Task<ActionResult<IEnumerable<ChiTietSanPham>>> GetByMaLoaiSP(int maLoaiSP)
-        {
             var list = await _context.ChiTietSanPham
-                                     .Where(ct => ct.MaLoaiSP == maLoaiSP && !ct.isDeleted)
-                                     .ToListAsync();
-
-            if (list == null || list.Count == 0)
-            {
-                return NotFound("Không tìm thấy sản phẩm với mã loại đã cho.");
-            }
-
-            return Ok(list);
-        }
-        // GET: api/ChiTietSanPham/sanpham/{maSanPham}
-        [HttpGet("sanpham/{maSanPham}")]
-        public async Task<ActionResult<IEnumerable<ChiTietSanPham>>> GetChiTietTheoMaSanPham(int maSanPham)
-        {
-            var danhSachChiTiet = await _context.ChiTietSanPham
-                .Where(ct => ct.MaSanPham == maSanPham && !ct.isDeleted)
+                .Where(c => c.MaSanPham == masp)
+                .AsNoTracking()
                 .ToListAsync();
 
-            if (danhSachChiTiet == null || danhSachChiTiet.Count == 0)
+            list.ForEach(item =>
             {
-                return NotFound("Không tìm thấy chi tiết sản phẩm với mã sản phẩm đã cho.");
-            }
+                if (!string.IsNullOrEmpty(item.HinhAnh))
+                {
+                    string imagePath = Path.Combine(ImageDirectory, item.HinhAnh);
+                    if (!System.IO.File.Exists(imagePath))
+                    {
+                        item.HinhAnh = null;
+                    }
+                }
+            });
 
-            return Ok(danhSachChiTiet);
+            if (list.Count == 0)
+                return NotFound("Không tìm thấy biến thể cho sản phẩm này.");
+
+            return list;
         }
-
-
     }
 }

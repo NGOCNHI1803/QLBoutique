@@ -28,7 +28,7 @@ namespace QLBoutique.Controllers
 
         // GET: api/NhaCungCap/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<NhaCungCap>> GetNhaCungCap(int id)
+        public async Task<ActionResult<NhaCungCap>> GetNhaCungCap(string id)
         {
             var nhaCungCap = await _context.NhaCungCap.FindAsync(id);
 
@@ -52,7 +52,7 @@ namespace QLBoutique.Controllers
 
         // PUT: api/NhaCungCap/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutNhaCungCap(int id, NhaCungCap nhaCungCap)
+        public async Task<IActionResult> PutNhaCungCap(string id, NhaCungCap nhaCungCap)
         {
             if (id != nhaCungCap.MaNCC)
             {
@@ -82,7 +82,7 @@ namespace QLBoutique.Controllers
 
         // DELETE: api/NhaCungCap/5
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteNhaCungCap(int id)
+        public async Task<IActionResult> DeleteNhaCungCap(string id)
         {
             var nhaCungCap = await _context.NhaCungCap.FindAsync(id);
             if (nhaCungCap == null)
@@ -96,7 +96,7 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
-        private bool NhaCungCapExists(int id)
+        private bool NhaCungCapExists(string id)
         {
             return _context.NhaCungCap.Any(e => e.MaNCC == id);
         }

@@ -1,6 +1,4 @@
 ﻿using QLBoutique.Model;
-using System;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -8,21 +6,24 @@ namespace LabManagement.Model
 {
     public class SanPham
     {
-        public int? MaSanPham { get; set; } // Mã sản phẩm
+        public string? MaSanPham { get; set; } // Mã sản phẩm (MASP)
 
-        public string? TenSanPham { get; set; } // Tên sản phẩm
+        public string? TenSanPham { get; set; } // Tên sản phẩm (TENSP)
 
-        public double? GiaNhap { get; set; } // Giá nhập
+        public string? MoTa { get; set; } // Mô tả (MOTA)
 
-        public double? GiaBan { get; set; } // Giá bán
+        public string? HinhAnh { get; set; } // Hình ảnh (HINHANH)
 
-        public int? SoLuongTon { get; set; } // Số lượng tồn
+        public string? MaLoai { get; set; } // Mã loại sản phẩm (MALOAI)
 
-        public int? MaLoai { get; set; } // Mã loại sản phẩm
+        public string? MaNCC { get; set; } // Mã nhà cung cấp (MANCC)
 
-        public int? MaNCC { get; set; } // Mã nhà cung cấp
+        public int TrangThai { get; set; } = 1; // 1 hoạt động, 0 ngừng
 
-        public bool isDeleted { get; set; } = false;
+        [NotMapped]
+        public string? HinhAnhUrl => string.IsNullOrEmpty(HinhAnh)
+            ? null
+            : $"https://localhost:7265/images/{HinhAnh}";
 
         // Foreign key cho bảng LoaiSanPham
         [ForeignKey("MaLoai")]
