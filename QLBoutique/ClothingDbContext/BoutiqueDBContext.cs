@@ -15,6 +15,10 @@ namespace QLBoutique.ClothingDbContext
         public DbSet<NhaCungCap> NhaCungCap { get; set; }
         public DbSet<SanPham> SanPham { get; set; }
         public DbSet<ChiTietSanPham> ChiTietSanPham { get; set; }
+        public DbSet<KhachHang> KhachHang { get; set; }
+        public DbSet<LoaiKhachHang> LoaiKhachHang { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -123,6 +127,83 @@ namespace QLBoutique.ClothingDbContext
                       .HasForeignKey(e => e.MaLoaiSP)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+            // Thêm vào cuối OnModelCreating
+            modelBuilder.Entity<LoaiKhachHang>(entity =>
+            {
+                entity.ToTable("LOAI_KHACHHANG");
+
+                entity.HasKey(e => e.MaLoaiKH);
+
+                entity.Property(e => e.MaLoaiKH)
+                      .HasMaxLength(20);
+
+                entity.Property(e => e.TenLoaiKH)
+                      .IsRequired()
+                      .HasMaxLength(100);
+
+                entity.Property(e => e.DieuKienTongChi)
+                      .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.PhanTramGiam)
+                      .HasDefaultValue(0)
+                      .IsRequired();
+
+                entity.Property(e => e.MoTa)
+                      .HasMaxLength(200);
+            });
+
+            // Cấu hình cho bảng KhachHang
+            modelBuilder.Entity<KhachHang>(entity =>
+            {
+                // Khóa chính
+                entity.HasKey(e => e.MaKH);
+
+                // Các property theo đúng cấu trúc class
+                entity.Property(e => e.MaKH)
+                    .HasMaxLength(20)
+                    .IsRequired();
+
+                entity.Property(e => e.Email)
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.MatKhau)
+                    .IsRequired()
+                    .HasMaxLength(255);
+
+                entity.Property(e => e.TenKH)
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.DiaChi)
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.SoDienThoai)
+                    .HasMaxLength(10);
+
+                entity.Property(e => e.NgaySinh);
+
+                entity.Property(e => e.GhiChu)
+                    .HasMaxLength(100)
+                    .HasDefaultValue("Khách hàng mới");
+
+                entity.Property(e => e.MaLoaiKH)
+                    .HasMaxLength(20)
+                    .HasDefaultValue("KHT");
+
+                entity.Property(e => e.NgayDangKy)
+                    .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                entity.Property(e => e.TrangThai)
+                    .HasMaxLength(20)
+                    .HasDefaultValue("Hoạt động");
+
+                // Quan hệ khóa ngoại (nếu muốn cấu hình)
+                entity.HasOne(e => e.LoaiKhachHang)
+                    .WithMany()  // hoặc .WithMany(l => l.DsKhachHang) nếu có collection trong LoaiKhachHang
+                    .HasForeignKey(e => e.MaLoaiKH)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+            });
+
         }
     }
 }

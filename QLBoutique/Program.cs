@@ -1,9 +1,10 @@
-using QLBoutique;
+﻿using QLBoutique;
 using QLBoutique.ClothingDbContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
+using QLBoutique.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,7 +14,23 @@ builder.Services.AddDbContext<BoutiqueDBContext>(options =>
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
 });
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
+// Đăng ký EmailService
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", builder =>
+    {
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
+    });
+});
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
