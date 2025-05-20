@@ -19,7 +19,6 @@ namespace QLBoutique.Controllers
             _context = context;
         }
 
-
         // GET: api/LoaiSanPham
         [HttpGet]
         public async Task<ActionResult<IEnumerable<LoaiSanPham>>> GetLoaiSanPhams()
@@ -27,9 +26,9 @@ namespace QLBoutique.Controllers
             return await _context.LoaiSanPham.ToListAsync();
         }
 
-        // GET: api/LoaiSanPham/5
+        // GET: api/LoaiSanPham/ma
         [HttpGet("{id}")]
-        public async Task<ActionResult<LoaiSanPham>> GetLoaiSanPham(int id)
+        public async Task<ActionResult<LoaiSanPham>> GetLoaiSanPham(string id)
         {
             var loaiSanPham = await _context.LoaiSanPham.FindAsync(id);
 
@@ -48,14 +47,14 @@ namespace QLBoutique.Controllers
             _context.LoaiSanPham.Add(loaiSanPham);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetLoaiSanPham), new { id = loaiSanPham.MaLoaiSP }, loaiSanPham);
+            return CreatedAtAction(nameof(GetLoaiSanPham), new { id = loaiSanPham.MaLoai }, loaiSanPham);
         }
 
-        // PUT: api/LoaiSanPham/5
+        // PUT: api/LoaiSanPham/ma
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutLoaiSanPham(int id, LoaiSanPham loaiSanPham)
+        public async Task<IActionResult> PutLoaiSanPham(string id, LoaiSanPham loaiSanPham)
         {
-            if (id != loaiSanPham.MaLoaiSP)
+            if (id != loaiSanPham.MaLoai)
             {
                 return BadRequest();
             }
@@ -81,9 +80,9 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
-        // DELETE: api/LoaiSanPham/5
+        // DELETE: api/LoaiSanPham/ma
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteLoaiSanPham(int id)
+        public async Task<IActionResult> DeleteLoaiSanPham(string id)
         {
             var loaiSanPham = await _context.LoaiSanPham.FindAsync(id);
             if (loaiSanPham == null)
@@ -97,9 +96,9 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
-        private bool LoaiSanPhamExists(int id)
+        private bool LoaiSanPhamExists(string id)
         {
-            return _context.LoaiSanPham.Any(e => e.MaLoaiSP == id);
+            return _context.LoaiSanPham.Any(e => e.MaLoai == id);
         }
     }
 }

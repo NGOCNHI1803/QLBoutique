@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QLBoutique.ClothingDbContext;
-using QLBoutique.Model;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,6 +13,10 @@ namespace QLBoutique.Controllers
     public class SanPhamController : ControllerBase
     {
         private readonly BoutiqueDBContext _context;
+        // Thư mục lưu hình (tương đối với root project, ví dụ: wwwroot/images/BienTheSanPham)
+        private static readonly string ImageDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Images");
+        // URL cơ sở để trả về client (thay bằng domain + port của bạn)
+        private const string ImageBaseUrl = "https://localhost:7265/Images";
 
         public SanPhamController(BoutiqueDBContext context)
         {
@@ -25,16 +28,16 @@ namespace QLBoutique.Controllers
         public async Task<ActionResult<IEnumerable<SanPham>>> GetAll()
         {
             return await _context.SanPham
-                .Where(sp => !sp.isDeleted)
+                .Where(sp => sp.TrangThai == 1)
                 .ToListAsync();
         }
 
-        // GET: api/SanPham/5
+        // GET: api/SanPham/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<SanPham>> GetById(int id)
+        public async Task<ActionResult<SanPham>> GetById(string id)
         {
             var sanPham = await _context.SanPham
-                .FirstOrDefaultAsync(sp => sp.MaSanPham == id && !sp.isDeleted);
+                .FirstOrDefaultAsync(sp => sp.MaSanPham == id && sp.TrangThai == 1);
 
             if (sanPham == null)
             {
@@ -48,15 +51,24 @@ namespace QLBoutique.Controllers
         [HttpPost]
         public async Task<ActionResult<SanPham>> Create(SanPham sanPham)
         {
+            if (!string.IsNullOrEmpty(sanPham.HinhAnh))
+            {
+                string fullImagePath = Path.Combine(ImageDirectory, sanPham.HinhAnh);
+                if (!System.IO.File.Exists(fullImagePath))
+                {
+                    return BadRequest("Hình ảnh không tồn tại.");
+                }
+            }
+            sanPham.TrangThai = 1; // Mặc định là hoạt động khi tạo
             _context.SanPham.Add(sanPham);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetById), new { id = sanPham.MaSanPham }, sanPham);
         }
 
-        // PUT: api/SanPham/5
+        // PUT: api/SanPham/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, SanPham sanPham)
+        public async Task<IActionResult> Update(string id, SanPham sanPham)
         {
             if (id != sanPham.MaSanPham)
             {
@@ -84,25 +96,62 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
-        // DELETE: api/SanPham/5 (soft delete)
+        // DELETE: api/SanPham/{id} (soft delete)
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> Delete(string id)
         {
             var sanPham = await _context.SanPham.FindAsync(id);
-            if (sanPham == null || sanPham.isDeleted)
+            if (sanPham == null || sanPham.TrangThai == 0)
             {
                 return NotFound();
             }
 
-            sanPham.isDeleted = true;
+            sanPham.TrangThai = 0; // Soft delete
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        private bool SanPhamExists(int id)
+        private bool SanPhamExists(string id)
         {
-            return _context.SanPham.Any(sp => sp.MaSanPham == id && !sp.isDeleted);
+            return _context.SanPham.Any(sp => sp.MaSanPham == id && sp.TrangThai == 1);
         }
+
+        // GET: api/SanPham/loai/{maLoaiSP}
+        [HttpGet("loai/{maLoaiSP}")]
+        public async Task<ActionResult<IEnumerable<SanPham>>> GetSanPhamTheoLoaiSP(string maLoaiSP)
+        {
+            var danhSach = await _context.SanPham
+                                         .Where(sp => sp.MaLoai == maLoaiSP && sp.TrangThai == 1)
+                                         .ToListAsync();
+
+            if (danhSach == null || !danhSach.Any())
+            {
+                return NotFound("Không tìm thấy sản phẩm thuộc loại này.");
+            }
+
+            return Ok(danhSach);
+        }
+        [HttpPost("upload")]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Không có file được gửi lên.");
+
+            string fileName = Path.GetFileName(file.FileName);
+            string filePath = Path.Combine(ImageDirectory, fileName);
+
+            Directory.CreateDirectory(ImageDirectory); // Đảm bảo thư mục tồn tại
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            string imageUrl = $"{ImageBaseUrl}/{fileName}";
+            return Ok(new { FileName = fileName, Url = imageUrl });
+        }
+
     }
+
 }
