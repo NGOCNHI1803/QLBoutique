@@ -168,5 +168,78 @@ namespace QLBoutique.Controllers
 
             return list;
         }
+        // POST: api/BienTheSanPham/upload
+        [HttpPost("upload")]
+        public async Task<IActionResult> UploadImage([FromForm] IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest("Không có file được gửi lên.");
+
+            // Tạo thư mục lưu ảnh nếu chưa có
+            if (!Directory.Exists(ImageDirectory))
+                Directory.CreateDirectory(ImageDirectory);
+
+            var fileName = Path.GetFileName(file.FileName);
+            var fullPath = Path.Combine(ImageDirectory, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            var imageUrl = $"{ImageBaseUrl}/{fileName}";
+            return Ok(new { imageUrl, fileName });
+        }
+        // GET: api/BienTheSanPham/loai/{maLoaiSP}
+        [HttpGet("loai/{maLoaiSP}")]
+        public async Task<ActionResult<IEnumerable<ChiTietSanPham>>> GetByMaLoaiSP(string maLoaiSP)
+        {
+            var result = await _context.ChiTietSanPham
+                .Include(ct => ct.SanPham) // bạn cần đảm bảo có navigation property từ ChiTietSanPham đến SanPham
+                .Where(ct => ct.SanPham.MaLoai == maLoaiSP)
+                .AsNoTracking()
+                .ToListAsync();
+
+            if (result == null || result.Count == 0)
+                return NotFound($"Không tìm thấy sản phẩm nào thuộc mã loại {maLoaiSP}");
+
+            return result;
+        }
+        // GET: api/BienTheSanPham/sanpham/{maSP}
+        [HttpGet("sanpham/{maSP}")]
+        public async Task<ActionResult<IEnumerable<ChiTietSanPham>>> GetBienTheTheoMaSP(string maSP)
+        {
+            if (string.IsNullOrWhiteSpace(maSP))
+                return BadRequest("Mã sản phẩm không được để trống.");
+
+            var bienTheList = await _context.ChiTietSanPham
+                .Where(c => c.MaSanPham == maSP)
+                .AsNoTracking()
+                .ToListAsync();
+
+            if (bienTheList == null || bienTheList.Count == 0)
+                return NotFound($"Không tìm thấy biến thể nào cho mã sản phẩm: {maSP}");
+
+            // Kiểm tra và xử lý đường dẫn hình ảnh
+            bienTheList.ForEach(item =>
+            {
+                if (!string.IsNullOrEmpty(item.HinhAnh))
+                {
+                    string imagePath = Path.Combine(ImageDirectory, item.HinhAnh);
+                    if (!System.IO.File.Exists(imagePath))
+                    {
+                        item.HinhAnh = null; // hoặc thay bằng hình mặc định
+                    }
+                    else
+                    {
+                        item.HinhAnh = $"{ImageBaseUrl}/{item.HinhAnh}";
+                    }
+                }
+            });
+
+            return bienTheList;
+        }
+
+
     }
 }
