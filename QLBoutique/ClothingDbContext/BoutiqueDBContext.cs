@@ -18,6 +18,8 @@ namespace QLBoutique.ClothingDbContext
         public DbSet<KhachHang> KhachHang { get; set; }
         public DbSet<LoaiKhachHang> LoaiKhachHang { get; set; }
 
+        public DbSet<GioHang> GioHang { get; set; }
+        public DbSet<ChiTietGioHang> ChiTietGioHang { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -275,6 +277,73 @@ namespace QLBoutique.ClothingDbContext
                     .HasForeignKey(e => e.MaLoaiKH)
                     .OnDelete(DeleteBehavior.Restrict);
 
+            });
+            modelBuilder.Entity<GioHang>(entity =>
+            {
+                entity.ToTable("GIOHANG");
+
+                entity.HasKey(e => e.MaGioHang);
+
+                entity.Property(e => e.MaGioHang)
+                      .HasColumnName("MAGIOHANG")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.MaKhachHang)
+                      .HasColumnName("MAKH")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.NgayTao)
+                      .HasColumnName("NGAYTAO");
+
+                entity.Property(e => e.NgayCapNhat)
+                      .HasColumnName("NGAYCAPNHAT");
+
+                entity.Property(e => e.TrangThai)
+                      .HasColumnName("TRANGTHAI")
+                      .HasDefaultValue(1);
+
+                // Thiết lập quan hệ với bảng KhachHang
+                entity.HasOne(e => e.KhachHang)
+                      .WithMany() // hoặc WithMany(k => k.DanhSachGioHang) nếu bạn có collection
+                      .HasForeignKey(e => e.MaKhachHang)
+                      .HasConstraintName("FK_GioHang_KhachHang")
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+            modelBuilder.Entity<ChiTietGioHang>(entity =>
+            {
+                entity.ToTable("CHITIET_GIOHANG");
+
+                entity.HasKey(e => new { e.MaGioHang, e.MaBienThe });
+
+                entity.Property(e => e.MaGioHang)
+                      .HasColumnName("MAGIOHANG")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.MaBienThe)
+                      .HasColumnName("MABIEN_THE")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.SoLuong)
+                      .HasColumnName("SOLUONG")
+                      .HasDefaultValue(1);
+
+                // Khóa ngoại đến GIOHANG
+                entity.HasOne(e => e.GioHang)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaGioHang)
+                      .HasConstraintName("FK_ChiTietGioHang_GioHang")
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Khóa ngoại đến BIEN_THE_SANPHAM
+                entity.HasOne(e => e.ChiTietSanPham)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaBienThe)
+                      .HasConstraintName("FK_ChiTietGioHang_ChiTietSanPham")
+                      .OnDelete(DeleteBehavior.Restrict);
             });
 
         }
