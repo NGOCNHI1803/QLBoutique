@@ -10,7 +10,7 @@ namespace QLBoutique.Model
         [Key]
         [Column("MAKH")]
         [StringLength(20)]
-        public string MaKH { get; set; }
+        public string? MaKH { get; set; }
 
         [Column("EMAIL")]
         [StringLength(100)]
@@ -59,6 +59,8 @@ namespace QLBoutique.Model
         public bool IsEmailConfirmed { get; set; } = false;
         public string? EmailConfirmationToken { get; set; }
         public DateTime? EmailTokenExpiry { get; set; }
+        public string? ResetPasswordToken { get; set; }
+        public DateTime? ResetPasswordExpiry { get; set; }
 
     }
 }

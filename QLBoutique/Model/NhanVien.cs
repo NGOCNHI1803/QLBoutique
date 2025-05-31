@@ -1,32 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
-
-namespace QLBoutique.Model
+﻿namespace QLBoutique.Model
 {
     public class NhanVien
     {
-        public uint MaNhanVien { get; set; } // Mã nhân viên
+        public string MaNV { get; set; } = null!;
+        public string? HoTen { get; set; }
+        public DateTime? NgaySinh { get; set; }
+        public bool? GioiTinh { get; set; }
+        public string? DiaChi { get; set; }
+        public string? SDT { get; set; }
+        public string? Email { get; set; }
+        public DateTime? NgayVaoLam { get; set; }
+        public string UserName { get; set; } = null!;
+        public string Password { get; set; } = null!;
+        public string? MaQuyen { get; set; }
+        public string? MaCV { get; set; }
 
-        public string? TenNV { get; set; } // Tên nhân viên
-
-        public string? MatKhau { get; set; } // Mật khẩu
-
-        public string? Email { get; set; } // Email
-
-        public string? DiaChi { get; set; } // Địa chỉ
-
-        public string? ChucVu { get; set; } // Chức vụ
-
-        public DateTime NgayVaoLam { get; set; } // Ngày vào làm
-
-
-        public bool isDeleted { get; set; } = false; // Đánh dấu xóa mềm
-         //public uint MaAdmin { get; set; } // Mã admin phụ trách
-
-
-        //// Navigation Property - liên kết với bảng Admin (nếu có)
-        //[ForeignKey("MaAdmin")]
-        //[JsonIgnore]
-        //public Admin? Admin { get; set; }
+        public virtual QuyenHan? QuyenHan { get; set; }
+        public virtual ChucVu? ChucVu { get; set; }
     }
 }

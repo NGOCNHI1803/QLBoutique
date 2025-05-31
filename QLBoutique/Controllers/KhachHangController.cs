@@ -2,10 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using QLBoutique.Model;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using QLBoutique.ClothingDbContext;
+using MimeKit;
+using MailKit.Net.Smtp;
+using System.Security.Cryptography;
 
 namespace QLBoutique.Controllers
 {
@@ -22,13 +22,13 @@ namespace QLBoutique.Controllers
             _passwordHasher = new PasswordHasher<KhachHang>();
         }
 
+        // Đăng ký khách hàng
         [HttpPost("DangKy")]
         public async Task<IActionResult> DangKy([FromBody] KhachHang khachHang)
         {
             if (khachHang == null)
                 return BadRequest("Dữ liệu khách hàng không hợp lệ.");
 
-            // Kiểm tra bắt buộc: mật khẩu, email, số điện thoại
             if (string.IsNullOrEmpty(khachHang.MatKhau))
                 return BadRequest("Mật khẩu không được để trống.");
             if (string.IsNullOrEmpty(khachHang.Email))
@@ -36,7 +36,7 @@ namespace QLBoutique.Controllers
             if (string.IsNullOrEmpty(khachHang.SoDienThoai))
                 return BadRequest("Số điện thoại không được để trống.");
 
-            // Kiểm tra email đã tồn tại- TH có email tồn tại là đã có tài khoản đã tạo trên web
+            // Kiểm tra email đã tồn tại
             var khachHangTheoEmail = await _context.KhachHang.FirstOrDefaultAsync(k => k.Email == khachHang.Email);
             if (khachHangTheoEmail != null)
                 return BadRequest("Email đã tồn tại. Tài khoản đã có trong hệ thống!");
@@ -46,7 +46,7 @@ namespace QLBoutique.Controllers
 
             if (khachHangTheoSoDT != null)
             {
-                // Nếu số điện thoại tồn tại nhưng chưa có email, cập nhật thông tin - TH khách hàng đã đăng ký thông tin tại cửa hàng
+                // Nếu số điện thoại tồn tại nhưng chưa có email => cập nhật
                 if (string.IsNullOrEmpty(khachHangTheoSoDT.Email))
                 {
                     khachHangTheoSoDT.Email = khachHang.Email;
@@ -58,11 +58,8 @@ namespace QLBoutique.Controllers
                     khachHangTheoSoDT.TrangThai = string.IsNullOrEmpty(khachHang.TrangThai) ? "Hoạt động" : khachHang.TrangThai;
                     khachHangTheoSoDT.NgayDangKy = DateTime.Now;
 
-                    //// Hash mật khẩu nếu có
-                    //if (!string.IsNullOrEmpty(khachHang.MatKhau))
-                    //{
+                    // Hash mật khẩu và cập nhật
                     khachHangTheoSoDT.MatKhau = _passwordHasher.HashPassword(khachHangTheoSoDT, khachHang.MatKhau);
-                    //}
 
                     _context.KhachHang.Update(khachHangTheoSoDT);
                     await _context.SaveChangesAsync();
@@ -71,14 +68,11 @@ namespace QLBoutique.Controllers
                 }
                 else
                 {
-                    // Số điện thoại đã tồn tại với email => tài khoản đã tạo trên web
                     return BadRequest("Tài khoản đã tồn tại. Xin hãy đăng nhập!");
                 }
-
-
             }
 
-            // Hàm sinh mã khách hàng KHxxxxx đảm bảo không trùng
+            // Tạo mã khách hàng KHxxxxx không trùng
             async Task<string> GenerateUniqueMaKHAsync()
             {
                 string maKH;
@@ -108,8 +102,7 @@ namespace QLBoutique.Controllers
             return CreatedAtAction(nameof(GetKhachHang), new { id = khachHang.MaKH }, khachHang);
         }
 
-
-        // GET: api/KhachHang/DangNhap?email=abc@xyz.com&matKhau=123
+        // Đăng nhập
         [HttpGet("DangNhap")]
         public async Task<IActionResult> DangNhap(string email, string matKhau)
         {
@@ -117,91 +110,67 @@ namespace QLBoutique.Controllers
                 return BadRequest("Email và mật khẩu là bắt buộc.");
 
             var khachHang = await _context.KhachHang.FirstOrDefaultAsync(k => k.Email == email);
-
             if (khachHang == null)
-            {
                 return Unauthorized("Email không đúng.");
-            }
 
-            // Nếu khách hàng không hoạt động, không cho đăng nhập
             if (khachHang.TrangThai != "Hoạt động")
-            {
                 return Unauthorized($"Tài khoản hiện đang '{khachHang.TrangThai}' và không thể đăng nhập.");
+
+            PasswordVerificationResult result;
+
+            try
+            {
+                // Kiểm tra mật khẩu hash
+                result = _passwordHasher.VerifyHashedPassword(khachHang, khachHang.MatKhau, matKhau);
+            }
+            catch (FormatException)
+            {
+                // Trường hợp mật khẩu lưu plaintext, kiểm tra và hash lại
+                if (khachHang.MatKhau == matKhau)
+                {
+                    khachHang.MatKhau = _passwordHasher.HashPassword(khachHang, matKhau);
+                    await _context.SaveChangesAsync();
+                    result = PasswordVerificationResult.Success;
+                }
+                else
+                {
+                    return Unauthorized("Mật khẩu không đúng.");
+                }
             }
 
-            var result = _passwordHasher.VerifyHashedPassword(khachHang, khachHang.MatKhau, matKhau);
             if (result == PasswordVerificationResult.Failed)
-            {
                 return Unauthorized("Mật khẩu không đúng.");
-            }
 
             return Ok(khachHang);
         }
 
-        // GET: api/KhachHang
+        // Lấy danh sách khách hàng trạng thái Hoạt động
         [HttpGet]
         public async Task<ActionResult<IEnumerable<KhachHang>>> GetKhachHangs()
         {
-            // Chỉ lấy khách hàng có trạng thái "Hoạt động"
-            return await _context.KhachHang
-                .Where(k => k.TrangThai == "Hoạt động")
-                .ToListAsync();
+            return await _context.KhachHang.Where(k => k.TrangThai == "Hoạt động").ToListAsync();
         }
 
-        // GET: api/KhachHang/5
+        // Lấy thông tin khách hàng theo mã
         [HttpGet("{id}")]
         public async Task<ActionResult<KhachHang>> GetKhachHang(string id)
         {
             var khachHang = await _context.KhachHang.FindAsync(id);
 
             if (khachHang == null || khachHang.TrangThai == "Đã xóa")
-            {
                 return NotFound();
-            }
 
             return khachHang;
         }
-        private string GenerateMaKhachHang()
-        {
-            Random random = new Random();
-            return "KH" + random.Next(0, 99999).ToString("D5"); // D5: định dạng thành chuỗi có 5 chữ số
-        }
-        // POST: api/KhachHang/ThemMoi
-        [HttpPost("ThemMoi")]
-        public async Task<IActionResult> ThemMoi([FromBody] KhachHang khachHang)
-        {
-            if (khachHang == null || string.IsNullOrEmpty(khachHang.MaKH))
-                return BadRequest("Thông tin khách hàng không hợp lệ.");
 
-            // Kiểm tra mã đã tồn tại
-            var exists = await _context.KhachHang.AnyAsync(k => k.MaKH == khachHang.MaKH);
-            if (exists)
-                return BadRequest("Mã khách hàng đã tồn tại.");
-
-            // Gán mặc định cho các giá trị không truyền từ FE
-            khachHang.NgayDangKy = DateTime.Now;
-            khachHang.MatKhau = "123"; // Có thể set mật khẩu mặc định hoặc random
-            khachHang.GhiChu = string.IsNullOrEmpty(khachHang.GhiChu) ? "Khách hàng mới" : khachHang.GhiChu;
-            khachHang.MaLoaiKH = string.IsNullOrEmpty(khachHang.MaLoaiKH) ? "KHT" : khachHang.MaLoaiKH;
-            khachHang.TrangThai = "Hoạt động";
-
-            // Nếu cần, có thể hash mật khẩu default
-            khachHang.MatKhau = _passwordHasher.HashPassword(khachHang, khachHang.MatKhau);
-
-            _context.KhachHang.Add(khachHang);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetKhachHang), new { id = khachHang.MaKH }, khachHang);
-        }
-        // GET: api/KhachHang/CheckSoDienThoai?soDienThoai=0123456789
+        // Kiểm tra số điện thoại đã tồn tại
         [HttpGet("CheckSoDienThoai")]
         public async Task<IActionResult> CheckSoDienThoai(string soDienThoai)
         {
             if (string.IsNullOrEmpty(soDienThoai))
                 return BadRequest("Vui lòng cung cấp số điện thoại.");
 
-            var khachHang = await _context.KhachHang
-                .FirstOrDefaultAsync(k => k.SoDienThoai == soDienThoai);
+            var khachHang = await _context.KhachHang.FirstOrDefaultAsync(k => k.SoDienThoai == soDienThoai);
 
             if (khachHang != null)
             {
@@ -216,8 +185,87 @@ namespace QLBoutique.Controllers
 
             return Ok(new { TonTai = false });
         }
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] KhachHang model)
+        {
+            if (model == null ||
+                string.IsNullOrEmpty(model.Email) ||
+                string.IsNullOrEmpty(model.ResetPasswordToken) ||
+                string.IsNullOrEmpty(model.MatKhau)) // MatKhau là mật khẩu mới
+            {
+                return BadRequest("Dữ liệu không hợp lệ.");
+            }
 
+            var khachHang = await _context.KhachHang.FirstOrDefaultAsync(k => k.Email == model.Email);
+            if (khachHang == null)
+                return BadRequest("Email không tồn tại.");
 
+            if (khachHang.ResetPasswordToken != model.ResetPasswordToken || khachHang.ResetPasswordExpiry < DateTime.UtcNow)
+                return BadRequest("Token đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.");
 
+            // Hash mật khẩu mới
+            khachHang.MatKhau = _passwordHasher.HashPassword(khachHang, model.MatKhau);
+
+            // Xóa token và thời gian hết hạn
+            khachHang.ResetPasswordToken = null;
+            khachHang.ResetPasswordExpiry = null;
+
+            _context.KhachHang.Update(khachHang);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Đặt lại mật khẩu thành công." });
+        }
+
+        // Quên mật khẩu - gửi email reset password
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return BadRequest("Vui lòng nhập email.");
+
+            var khachHang = await _context.KhachHang.FirstOrDefaultAsync(k => k.Email == email);
+            if (khachHang == null)
+                return BadRequest("Email không tồn tại.");
+
+            // Tạo token mạnh
+            var tokenBytes = RandomNumberGenerator.GetBytes(64);
+            var token = Convert.ToBase64String(tokenBytes);
+            var expiry = DateTime.UtcNow.AddHours(1);
+
+            khachHang.ResetPasswordToken = token;
+            khachHang.ResetPasswordExpiry = expiry;
+            await _context.SaveChangesAsync();
+
+            // Tạo link reset password (encode để tránh lỗi url)
+            var resetLink = $"http://localhost:3000/clothing-shop-app/reset-password?token={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+
+            // Tạo email
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("QLBoutique", "no-reply@yourdomain.com"));
+            message.To.Add(new MailboxAddress("", email));
+            message.Subject = "Đặt lại mật khẩu FASIC.VN";
+
+            message.Body = new TextPart("plain")
+            {
+                Text = $"Xin chào,\n\nBạn đã yêu cầu đặt lại mật khẩu. Vui lòng truy cập link dưới đây để đặt lại mật khẩu:\n\n{resetLink}\n\nLink chỉ có hiệu lực trong 1 giờ.\n\nNếu bạn không yêu cầu, hãy bỏ qua email này."
+            };
+
+            using var client = new SmtpClient();
+            try
+            {
+                await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+                await client.AuthenticateAsync("phanthithanhnga1303@gmail.com", ""); 
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+            }
+            catch (Exception ex)
+            {
+                // Có thể log lỗi ở đây nếu có logger
+                return StatusCode(500, "Gửi email thất bại: " + ex.Message);
+            }
+
+            return Ok("Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư!");
+        }
     }
+
 }

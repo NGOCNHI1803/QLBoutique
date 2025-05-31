@@ -20,6 +20,8 @@ namespace QLBoutique.ClothingDbContext
 
         public DbSet<GioHang> GioHang { get; set; }
         public DbSet<ChiTietGioHang> ChiTietGioHang { get; set; }
+        public DbSet<QuyenHan> QuyenHan { get; set; }
+        public DbSet<NhanVien> NhanVien { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -27,8 +29,34 @@ namespace QLBoutique.ClothingDbContext
 
             modelBuilder.Entity<ChucVu>(entity =>
             {
-                entity.HasKey(e => e.MaChucVu);
-                entity.Property(e => e.TenChucVu).IsRequired().HasMaxLength(150);
+                entity.HasKey(e => e.MaCV);
+                entity.Property(e => e.TenCV).IsRequired().HasMaxLength(150);
+            });
+            // Cấu hình bảng QuyenHan
+            modelBuilder.Entity<QuyenHan>(entity =>
+            {
+                entity.HasKey(e => e.MaQuyen);
+                entity.Property(e => e.TenQuyen).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.MoTa).HasMaxLength(200);
+            });
+
+            // Cấu hình bảng NhanVien
+            modelBuilder.Entity<NhanVien>(entity =>
+            {
+                entity.HasKey(e => e.MaNV);
+                entity.Property(e => e.HoTen).HasMaxLength(100);
+                entity.Property(e => e.DiaChi).HasMaxLength(200);
+                entity.Property(e => e.SDT).HasMaxLength(10).IsFixedLength();
+                entity.Property(e => e.UserName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
+
+                entity.HasOne(e => e.QuyenHan)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaQuyen);
+
+                entity.HasOne(e => e.ChucVu)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaCV);
             });
 
             modelBuilder.Entity<LoaiSanPham>(entity =>

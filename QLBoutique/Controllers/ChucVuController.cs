@@ -28,7 +28,7 @@ namespace QLBoutique.Controllers
 
         // GET: api/ChucVu/{id}
         [HttpGet("{id}")]
-        public async Task<ActionResult<ChucVu>> GetChucVu(int id)
+        public async Task<ActionResult<ChucVu>> GetChucVu(string id)
         {
             var chucVu = await _context.ChucVu.FindAsync(id);
 
@@ -47,15 +47,14 @@ namespace QLBoutique.Controllers
             _context.ChucVu.Add(chucVu);
             await _context.SaveChangesAsync();
 
-            // Đảm bảo id được trả về đúng
-            return CreatedAtAction(nameof(GetChucVu), new { id = chucVu.MaChucVu }, chucVu);
+            return CreatedAtAction(nameof(GetChucVu), new { id = chucVu.MaCV }, chucVu);
         }
 
         // PUT: api/ChucVu/{id}
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutChucVu(int id, ChucVu chucVu)
+        public async Task<IActionResult> PutChucVu(string id, ChucVu chucVu)
         {
-            if (id != chucVu.MaChucVu)
+            if (id != chucVu.MaCV)
             {
                 return BadRequest();
             }
@@ -83,7 +82,7 @@ namespace QLBoutique.Controllers
 
         // DELETE: api/ChucVu/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteChucVu(int id)  // Thay đổi kiểu id từ string thành int
+        public async Task<IActionResult> DeleteChucVu(string id)
         {
             var chucVu = await _context.ChucVu.FindAsync(id);
             if (chucVu == null)
@@ -97,9 +96,9 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
-        private bool ChucVuExists(int id)
+        private bool ChucVuExists(string id)
         {
-            return _context.ChucVu.Any(e => e.MaChucVu == id);
+            return _context.ChucVu.Any(e => e.MaCV == id);
         }
     }
 }
