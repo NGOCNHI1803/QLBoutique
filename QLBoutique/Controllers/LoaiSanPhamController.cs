@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using QLBoutique.ClothingDbContext;
 using QLBoutique.Model;
+using QLBoutique.Model.DTO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -21,10 +22,38 @@ namespace QLBoutique.Controllers
 
         // GET: api/LoaiSanPham
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<LoaiSanPham>>> GetLoaiSanPhams()
+        public async Task<ActionResult<IEnumerable<LoaiSanPhamDTO>>> GetLoaiSanPhams()
         {
-            return await _context.LoaiSanPham.ToListAsync();
+            var allLoai = await _context.LoaiSanPham.ToListAsync();
+
+            var loaiSanPhamDict = allLoai.ToDictionary(
+                x => x.MaLoai!,
+                x => new LoaiSanPhamDTO
+                {
+                    MaLoai = x.MaLoai,
+                    TenLoai = x.TenLoai,
+                    XuatSu = x.XuatSu,
+                    Children = new List<LoaiSanPhamDTO>()
+                });
+
+            List<LoaiSanPhamDTO> danhSachPhanCap = new List<LoaiSanPhamDTO>();
+
+            foreach (var loai in allLoai)
+            {
+                if (!string.IsNullOrEmpty(loai.ParentId) && loaiSanPhamDict.ContainsKey(loai.ParentId))
+                {
+                    loaiSanPhamDict[loai.ParentId].Children!.Add(loaiSanPhamDict[loai.MaLoai!]);
+                }
+                else
+                {
+                    // Là loại gốc không có cha
+                    danhSachPhanCap.Add(loaiSanPhamDict[loai.MaLoai!]);
+                }
+            }
+
+            return Ok(danhSachPhanCap);
         }
+
 
         // GET: api/LoaiSanPham/ma
         [HttpGet("{id}")]
@@ -40,23 +69,45 @@ namespace QLBoutique.Controllers
             return loaiSanPham;
         }
 
-        // POST: api/LoaiSanPham
         [HttpPost]
         public async Task<ActionResult<LoaiSanPham>> PostLoaiSanPham(LoaiSanPham loaiSanPham)
         {
+            if (!string.IsNullOrEmpty(loaiSanPham.ParentId))
+            {
+                var parentExists = await _context.LoaiSanPham.AnyAsync(x => x.MaLoai == loaiSanPham.ParentId);
+                if (!parentExists)
+                {
+                    return BadRequest("ParentId không tồn tại.");
+                }
+            }
+
             _context.LoaiSanPham.Add(loaiSanPham);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetLoaiSanPham), new { id = loaiSanPham.MaLoai }, loaiSanPham);
         }
 
-        // PUT: api/LoaiSanPham/ma
+
         [HttpPut("{id}")]
         public async Task<IActionResult> PutLoaiSanPham(string id, LoaiSanPham loaiSanPham)
         {
             if (id != loaiSanPham.MaLoai)
             {
-                return BadRequest();
+                return BadRequest("ID không khớp.");
+            }
+
+            if (!string.IsNullOrEmpty(loaiSanPham.ParentId))
+            {
+                if (loaiSanPham.ParentId == id)
+                {
+                    return BadRequest("ParentId không thể trùng với chính nó.");
+                }
+
+                var parentExists = await _context.LoaiSanPham.AnyAsync(x => x.MaLoai == loaiSanPham.ParentId);
+                if (!parentExists)
+                {
+                    return BadRequest("ParentId không tồn tại.");
+                }
             }
 
             _context.Entry(loaiSanPham).State = EntityState.Modified;
@@ -80,7 +131,6 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
-        // DELETE: api/LoaiSanPham/ma
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteLoaiSanPham(string id)
         {
@@ -90,11 +140,18 @@ namespace QLBoutique.Controllers
                 return NotFound();
             }
 
+            var hasChildren = await _context.LoaiSanPham.AnyAsync(x => x.ParentId == id);
+            if (hasChildren)
+            {
+                return BadRequest("Không thể xóa vì còn loại con.");
+            }
+
             _context.LoaiSanPham.Remove(loaiSanPham);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
 
         private bool LoaiSanPhamExists(string id)
         {
