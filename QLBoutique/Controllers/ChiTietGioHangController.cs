@@ -126,5 +126,43 @@ namespace QLBoutique.Controllers
             await _context.SaveChangesAsync();
             return Ok("Xóa sản phẩm khỏi giỏ hàng thành công");
         }
+        // GET: api/ChiTietGioHang/ma-bien-the?maSanPham=SP001&mauSac=Đỏ&kichThuoc=M
+        [HttpGet("ma-bien-the")]
+        public async Task<ActionResult<string>> GetMaBienThe([FromQuery] string maSanPham, [FromQuery] string mauSac, [FromQuery] string kichThuoc)
+        {
+            if (string.IsNullOrEmpty(maSanPham) || string.IsNullOrEmpty(mauSac) || string.IsNullOrEmpty(kichThuoc))
+                return BadRequest("Thiếu thông tin cần thiết");
+
+            var bienThe = await _context.ChiTietSanPham
+                .FirstOrDefaultAsync(bt =>
+                    bt.MaSanPham == maSanPham &&
+                    bt.MauSac.ToLower() == mauSac &&
+                    bt.Size.ToLower() == kichThuoc &&
+                    bt.TrangThai == 1);
+
+            if (bienThe == null)
+                return NotFound("Không tìm thấy biến thể phù hợp");
+
+            return Ok(new { maBienThe = bienThe.MaBienThe });
+        }
+
+        // GET: api/ChiTietGioHang/bienthe/{maBienThe}
+        [HttpGet("bienthe/{maBienThe}")]
+        public async Task<ActionResult<ChiTietSanPham>> GetBienTheTheoMaBienThe(string maBienThe)
+        {
+            if (string.IsNullOrEmpty(maBienThe))
+                return BadRequest("Mã biến thể không được để trống");
+
+            var bienThe = await _context.ChiTietSanPham
+                .Include(bt => bt.SanPham) // nếu muốn lấy luôn thông tin sản phẩm cha (tuỳ thuộc model của bạn)
+                .FirstOrDefaultAsync(bt => bt.MaBienThe == maBienThe && bt.TrangThai == 1);
+
+            if (bienThe == null)
+                return NotFound("Không tìm thấy biến thể sản phẩm");
+
+            return Ok(bienThe);
+        }
+
+
     }
 }
