@@ -36,7 +36,7 @@ namespace QLBoutique.Controllers
             if (string.IsNullOrEmpty(khachHang.SoDienThoai))
                 return BadRequest("Số điện thoại không được để trống.");
 
-            // Kiểm tra email đã tồn tại
+            // Kiểm tra email đã tồn tại- TH có email tồn tại là đã có tài khoản đã tạo trên web
             var khachHangTheoEmail = await _context.KhachHang.FirstOrDefaultAsync(k => k.Email == khachHang.Email);
             if (khachHangTheoEmail != null)
                 return BadRequest("Email đã tồn tại. Tài khoản đã có trong hệ thống!");
@@ -46,7 +46,11 @@ namespace QLBoutique.Controllers
 
             if (khachHangTheoSoDT != null)
             {
+<<<<<<< HEAD
                 // Nếu số điện thoại tồn tại nhưng chưa có email => cập nhật
+=======
+                // Nếu số điện thoại tồn tại nhưng chưa có email, cập nhật thông tin - TH khách hàng đã đăng ký thông tin tại cửa hàng
+>>>>>>> dbd1ab9 (Update backend)
                 if (string.IsNullOrEmpty(khachHangTheoSoDT.Email))
                 {
                     khachHangTheoSoDT.Email = khachHang.Email;
@@ -58,8 +62,16 @@ namespace QLBoutique.Controllers
                     khachHangTheoSoDT.TrangThai = string.IsNullOrEmpty(khachHang.TrangThai) ? "Hoạt động" : khachHang.TrangThai;
                     khachHangTheoSoDT.NgayDangKy = DateTime.Now;
 
+<<<<<<< HEAD
                     // Hash mật khẩu và cập nhật
                     khachHangTheoSoDT.MatKhau = _passwordHasher.HashPassword(khachHangTheoSoDT, khachHang.MatKhau);
+=======
+                    //// Hash mật khẩu nếu có
+                    //if (!string.IsNullOrEmpty(khachHang.MatKhau))
+                    //{
+                    khachHangTheoSoDT.MatKhau = _passwordHasher.HashPassword(khachHangTheoSoDT, khachHang.MatKhau);
+                    //}
+>>>>>>> dbd1ab9 (Update backend)
 
                     _context.KhachHang.Update(khachHangTheoSoDT);
                     await _context.SaveChangesAsync();
@@ -68,6 +80,10 @@ namespace QLBoutique.Controllers
                 }
                 else
                 {
+<<<<<<< HEAD
+=======
+                    // Số điện thoại đã tồn tại với email => tài khoản đã tạo trên web
+>>>>>>> dbd1ab9 (Update backend)
                     return BadRequest("Tài khoản đã tồn tại. Xin hãy đăng nhập!");
                 }
             }
@@ -146,9 +162,14 @@ namespace QLBoutique.Controllers
 
         // Lấy danh sách khách hàng trạng thái Hoạt động
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<KhachHang>>> GetKhachHangs()
+        public async Task<IActionResult> GetAllKhachHang()
         {
+<<<<<<< HEAD
             return await _context.KhachHang.Where(k => k.TrangThai == "Hoạt động").ToListAsync();
+=======
+            var khachHangs = await _context.KhachHang.Where(k => k.TrangThai == "Hoạt động").ToListAsync();
+            return Ok(khachHangs);
+>>>>>>> dbd1ab9 (Update backend)
         }
 
         // Lấy thông tin khách hàng theo mã
@@ -216,6 +237,7 @@ namespace QLBoutique.Controllers
             return Ok(new { message = "Đặt lại mật khẩu thành công." });
         }
 
+<<<<<<< HEAD
         // Quên mật khẩu - gửi email reset password
         [HttpPost("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] string email)
@@ -269,3 +291,171 @@ namespace QLBoutique.Controllers
     }
 
 }
+=======
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateKhachHang([FromBody] KhachHang kh)
+        {
+            if (kh == null)
+                return BadRequest("Dữ liệu không hợp lệ.");
+
+            // Hash mật khẩu trước
+            var hashedPassword = _passwordHasher.HashPassword(kh, kh.MatKhau);
+
+            var newKh = new KhachHang
+            {
+                MaKH = kh.MaKH,
+                TenKH = kh.TenKH,
+                DiaChi = kh.DiaChi,
+                SoDienThoai = kh.SoDienThoai,
+                MaLoaiKH = kh.MaLoaiKH ?? "KHT",
+                TaiKhoan = kh.TaiKhoan,
+                MatKhau = hashedPassword,
+                GhiChu = kh.GhiChu ?? "Khách hàng mới",
+                NgaySinh = kh.NgaySinh ?? DateTime.MinValue,
+                NgayDangKy = DateTime.Now,
+                TrangThai = "Hoạt động",
+
+                // Các thuộc tính khác giữ mặc định hoặc null
+                // Email = null,
+                // NgaySinh = null,
+                // IsEmailConfirmed = false,
+                // EmailConfirmationToken = null,
+                // EmailTokenExpiry = null,
+            };
+
+            _context.KhachHang.Add(newKh);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Thêm khách hàng thành công", newKh.MaKH });
+        }
+
+
+        // POST: api/KhachHang/ThemMoi
+        [HttpPost("ThemMoi")]
+        public async Task<IActionResult> ThemMoi([FromBody] KhachHang khachHang)
+        {
+            if (khachHang == null || string.IsNullOrEmpty(khachHang.MaKH))
+                return BadRequest("Thông tin khách hàng không hợp lệ.");
+
+            // Kiểm tra mã đã tồn tại
+            var exists = await _context.KhachHang.AnyAsync(k => k.MaKH == khachHang.MaKH);
+            if (exists)
+                return BadRequest("Mã khách hàng đã tồn tại.");
+
+            // Gán mặc định cho các giá trị không truyền từ FE
+            khachHang.NgayDangKy = DateTime.Now;
+            khachHang.MatKhau = "123"; // Có thể set mật khẩu mặc định hoặc random
+            khachHang.GhiChu = string.IsNullOrEmpty(khachHang.GhiChu) ? "Khách hàng mới" : khachHang.GhiChu;
+            khachHang.MaLoaiKH = string.IsNullOrEmpty(khachHang.MaLoaiKH) ? "KHT" : khachHang.MaLoaiKH;
+            khachHang.TrangThai = "Hoạt động";
+
+            // Nếu cần, có thể hash mật khẩu default
+            khachHang.MatKhau = _passwordHasher.HashPassword(khachHang, khachHang.MatKhau);
+
+            _context.KhachHang.Add(khachHang);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetKhachHang), new { id = khachHang.MaKH }, khachHang);
+        }
+        // GET: api/KhachHang/CheckSoDienThoai?soDienThoai=0123456789
+        [HttpGet("CheckSoDienThoai")]
+        public async Task<IActionResult> CheckSoDienThoai(string soDienThoai)
+        {
+            if (string.IsNullOrEmpty(soDienThoai))
+                return BadRequest("Vui lòng cung cấp số điện thoại.");
+
+            var khachHang = await _context.KhachHang
+                .FirstOrDefaultAsync(k => k.SoDienThoai == soDienThoai);
+
+            if (khachHang != null)
+            {
+                return Ok(new
+                {
+                    TonTai = true,
+                    DaCoEmail = !string.IsNullOrEmpty(khachHang.Email),
+                    MaKH = khachHang.MaKH,
+                    TenKH = khachHang.TenKH
+                });
+            }
+
+            return Ok(new { TonTai = false });
+        }
+
+        // Tìm kiếm theo số điện thoại khách hàng
+        // GET: api/KhachHang/search?SDT=xxx
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchByPhoneNumberCus([FromQuery] string SDT)
+        {
+            if (string.IsNullOrWhiteSpace(SDT))
+                return BadRequest("Bạn phải cung cấp số điện thoại.");
+
+            var list = await _context.KhachHang
+                .AsNoTracking()
+                .Where(k => k.SoDienThoai == SDT)
+                .Select(k => new
+                {
+                    k.MaKH,
+                    k.Email,
+                    k.MatKhau,
+                    k.TenKH,
+                    k.DiaChi,
+                    k.SoDienThoai,
+                    k.NgaySinh,
+                    k.GhiChu,
+                    k.MaLoaiKH,
+                    k.NgayDangKy
+                })
+                .ToListAsync();
+
+            if (list == null || list.Count == 0)
+                return NotFound("Không tìm thấy khách hàng nào với số điện thoại đã cho.");
+
+            return Ok(list);
+        }
+
+        // GET: api/KhachHang/getPoint
+        [HttpGet("Search_point")]
+        public async Task<IActionResult> TimKiemKHVaDiem([FromQuery] string tenKH, [FromQuery] string sdt)
+        {
+            if (string.IsNullOrWhiteSpace(tenKH) || string.IsNullOrWhiteSpace(sdt))
+                return BadRequest("Tên và SĐT không được để trống.");
+
+            var khachHang = await _context.KhachHang.AsNoTracking()
+                .FirstOrDefaultAsync(kh => kh.TenKH == tenKH && kh.SoDienThoai == sdt);
+
+            if (khachHang == null)
+                return NotFound("Không tìm thấy khách hàng.");
+
+            var tongDiem = await _context.LichSuDiems.AsNoTracking()
+                .Where(d => d.MaKH == khachHang.MaKH)
+                .SumAsync(d => (int?)d.Diem) ?? 0;
+
+            return Ok(new
+            {
+                MaKH = khachHang.MaKH,
+                TenKH = khachHang.TenKH,
+                SoDienThoai = khachHang.SoDienThoai,
+                DiemTichLuy = tongDiem
+            });
+        }
+
+        // GET: api/KhachHang/getID
+        [HttpGet("GetMaKH")]
+        public async Task<IActionResult> GetMaKH([FromQuery] string tenKH, [FromQuery] string sdt)
+        {
+            if (string.IsNullOrWhiteSpace(tenKH) || string.IsNullOrWhiteSpace(sdt))
+                return BadRequest("Tên và số điện thoại không được để trống.");
+
+            var khachHang = await _context.KhachHang
+                .AsNoTracking()
+                .FirstOrDefaultAsync(k => k.TenKH == tenKH && k.SoDienThoai == sdt);
+
+            if (khachHang == null)
+                return NotFound("Không tìm thấy khách hàng.");
+
+            return Ok(new { MaKH = khachHang.MaKH });
+        }
+
+    }
+}
+>>>>>>> dbd1ab9 (Update backend)

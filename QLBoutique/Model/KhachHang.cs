@@ -16,6 +16,10 @@ namespace QLBoutique.Model
         [StringLength(100)]
         public string? Email { get; set; }
 
+        [Column("USERNAME")]
+        [StringLength(50)]
+        public string? TaiKhoan { get; set; }
+
         [Column("PASSWORD")]
         [Required]
         [StringLength(255)]
@@ -45,7 +49,7 @@ namespace QLBoutique.Model
         public string? MaLoaiKH { get; set; } = "KHT";
 
         [Column("NGAYDANGKY")]
-        public DateTime NgayDangKy { get; set; } = DateTime.Now;
+        public DateTime? NgayDangKy { get; set; } = DateTime.Now;
 
         [Column("TRANGTHAI")]
         [StringLength(20)]

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QLBoutique.ClothingDbContext;
+using QLBoutique.Model;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -151,6 +152,38 @@ namespace QLBoutique.Controllers
             string imageUrl = $"{ImageBaseUrl}/{fileName}";
             return Ok(new { FileName = fileName, Url = imageUrl });
         }
+
+        // Tìm kiếm theo tên sản phẩm
+        // GET: api/SanPham/search?TenSP=xxx
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<SanPham>>> SearchByTenSP([FromQuery] string tensp)
+        {
+            if (string.IsNullOrEmpty(tensp))
+                return BadRequest("Bạn phải cung cấp tên sản phẩm (tensp).");
+
+            var list = await _context.SanPham
+                .Where(c => c.TenSanPham == tensp)
+                .AsNoTracking()
+                .ToListAsync();
+
+            list.ForEach(item =>
+            {
+                if (!string.IsNullOrEmpty(item.HinhAnh))
+                {
+                    string imagePath = Path.Combine(ImageDirectory, item.HinhAnh);
+                    if (!System.IO.File.Exists(imagePath))
+                    {
+                        item.HinhAnh = null;
+                    }
+                }
+            });
+
+            if (list.Count == 0)
+                return NotFound("Không tìm thấy sản phẩm này.");
+
+            return list;
+        }
+
 
     }
 

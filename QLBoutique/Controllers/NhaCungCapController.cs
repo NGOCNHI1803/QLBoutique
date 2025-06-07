@@ -80,6 +80,39 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
+        // PUT: api/NhaCungCap/Update/5
+        [HttpPut("Update/{id}")]
+        public async Task<IActionResult> PutUpdateNhaCungCap(string id, NhaCungCap nhaCungCap)
+        {
+            if (id != nhaCungCap.MaNCC)
+            {
+                return BadRequest("Mã nhà cung cấp không khớp.");
+            }
+
+            var existingSupplier = await _context.NhaCungCap.FindAsync(id);
+            if (existingSupplier == null)
+            {
+                return NotFound("Không tìm thấy nhà cung cấp.");
+            }
+
+            // Cập nhật các trường
+            existingSupplier.TenNCC = nhaCungCap.TenNCC;
+            existingSupplier.DiaChi = nhaCungCap.DiaChi;
+            existingSupplier.SDT = nhaCungCap.SDT;
+            existingSupplier.Email = nhaCungCap.Email;
+            existingSupplier.TrangThai = nhaCungCap.TrangThai;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(existingSupplier);
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, $"Lỗi cập nhật dữ liệu: {ex.Message}");
+            }
+        }
+
         // DELETE: api/NhaCungCap/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNhaCungCap(string id)

@@ -61,6 +61,32 @@ namespace QLBoutique.Controllers
 
             return item;
         }
+        // GET: api/BienTheSanPham/{maSanPham}
+        [HttpGet("GetByProductId/{masanpham}")]
+        public async Task<ActionResult<IEnumerable<ChiTietSanPham>>> GetByIdProduct(string masanpham)
+        {
+            var list = await _context.ChiTietSanPham
+                .Where(ct => ct.MaSanPham == masanpham)
+                .ToListAsync();
+
+            //if (list == null || list.Count == 0)
+            //    return NotFound("Không tìm thấy biến thể nào cho sản phẩm này.");
+
+            return list;
+        }
+        // GET: api/BienTheSanPham/{Barcode}
+        [HttpGet("GetByBarcode/{barcode}")]
+        public async Task<ActionResult<IEnumerable<ChiTietSanPham>>> GetByBarcode(string barcode)
+        {
+            var list = await _context.ChiTietSanPham
+                .Where(ct => ct.Barcode.Trim() == barcode.Trim())
+                .ToListAsync();
+
+            if (list == null || list.Count == 0)
+                return NotFound("Không tìm thấy biến thể nào cho sản phẩm này.");
+
+            return list;
+        }
 
         // POST: api/BienTheSanPham
         [HttpPost]
