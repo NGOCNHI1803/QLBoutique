@@ -22,6 +22,8 @@ namespace QLBoutique.ClothingDbContext
         public DbSet<ChiTietGioHang> ChiTietGioHang { get; set; }
         public DbSet<QuyenHan> QuyenHan { get; set; }
         public DbSet<NhanVien> NhanVien { get; set; }
+        public DbSet<PhieuNhap> PhieuNhap { get; set; }
+        public DbSet<ChiTietPhieuNhap> ChiTietPhieuNhap { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -373,6 +375,100 @@ namespace QLBoutique.ClothingDbContext
                       .HasConstraintName("FK_ChiTietGioHang_ChiTietSanPham")
                       .OnDelete(DeleteBehavior.Restrict);
             });
+            // Cấu hình bảng PHIEUNHAP
+            modelBuilder.Entity<PhieuNhap>(entity =>
+            {
+                entity.ToTable("PHIEUNHAP");
+
+                entity.HasKey(e => e.MaPhieuNhap);
+
+                entity.Property(e => e.MaPhieuNhap)
+                      .HasColumnName("MAPHIEUNHAP")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.MaNCC)
+                      .HasColumnName("MANCC")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.MaNV)
+                      .HasColumnName("MANV")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.NgayNhap)
+                      .HasColumnName("NGAYNHAP");
+
+                entity.Property(e => e.TongTien)
+                      .HasColumnName("TONGTIEN")
+                      .HasColumnType("decimal(18,2)")
+                      .HasDefaultValue(0);
+
+                entity.Property(e => e.GhiChu)
+                      .HasColumnName("GHICHU")
+                      .HasMaxLength(200);
+
+                entity.Property(e => e.TrangThai)
+                      .HasColumnName("TRANGTHAI")
+                      .HasDefaultValue(1);
+
+                // Quan hệ với NhaCungCap
+                entity.HasOne(e => e.NhaCungCap)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaNCC)
+                      .HasConstraintName("FK_PhieuNhap_NhaCungCap")
+                      .OnDelete(DeleteBehavior.Restrict);
+
+                // Quan hệ với NhanVien
+                entity.HasOne(e => e.NhanVien)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaNV)
+                      .HasConstraintName("FK_PhieuNhap_NhanVien")
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Cấu hình bảng CHITIET_PHIEUNHAP
+            modelBuilder.Entity<ChiTietPhieuNhap>(entity =>
+            {
+                entity.ToTable("CHITIET_PHIEUNHAP");
+
+                entity.HasKey(e => new { e.MaPhieuNhap, e.MaBienThe });
+
+                entity.Property(e => e.MaPhieuNhap)
+                      .HasColumnName("MAPHIEUNHAP")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.MaBienThe)
+                      .HasColumnName("MABIEN_THE")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.SoLuong)
+                      .HasColumnName("SOLUONG")
+                      .IsRequired();
+
+                entity.Property(e => e.Gia_Von)
+                      .HasColumnName("GIA_VON")
+                      .HasColumnType("decimal(18,2)")
+                      .IsRequired();
+
+                // Khóa ngoại đến PhieuNhap
+                entity.HasOne(e => e.PhieuNhap)
+                      .WithMany(p => p.ChiTietPhieuNhaps)
+                      .HasForeignKey(e => e.MaPhieuNhap)
+                      .HasConstraintName("FK_ChiTietPhieuNhap_PhieuNhap")
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Khóa ngoại đến ChiTietSanPham (Biến thể sản phẩm)
+                entity.HasOne(e => e.BienTheSanPham)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaBienThe)
+                      .HasConstraintName("FK_ChiTietPhieuNhap_ChiTietSanPham")
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
+
 
         }
     }
