@@ -139,7 +139,7 @@ namespace QLBoutique.Controllers
             {
                 // Bước 1: Tìm giỏ hàng còn hiệu lực của khách hàng
                 var gioHang = await _context.GioHang
-                    .FirstOrDefaultAsync(g => g.MaKhachHang == request.MaKhachHang && g.TrangThai == 1);
+                    .FirstOrDefaultAsync(g => g.MaKH == request.MaKhachHang && g.TrangThai == 1);
 
                 // Bước 2: Nếu chưa có giỏ thì tạo mới
                 if (gioHang == null)
@@ -147,7 +147,7 @@ namespace QLBoutique.Controllers
                     gioHang = new GioHang
                     {
                         MaGioHang = Guid.NewGuid().ToString("N").Substring(0, 20), // tạo mã 20 ký tự
-                        MaKhachHang = request.MaKhachHang,
+                        MaKH = request.MaKhachHang,
                         NgayTao = DateTime.Now,
                         NgayCapNhat = DateTime.Now,
                         TrangThai = 1

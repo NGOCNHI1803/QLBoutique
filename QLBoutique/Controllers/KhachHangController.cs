@@ -46,11 +46,7 @@ namespace QLBoutique.Controllers
 
             if (khachHangTheoSoDT != null)
             {
-<<<<<<< HEAD
-                // Nếu số điện thoại tồn tại nhưng chưa có email => cập nhật
-=======
                 // Nếu số điện thoại tồn tại nhưng chưa có email, cập nhật thông tin - TH khách hàng đã đăng ký thông tin tại cửa hàng
->>>>>>> dbd1ab9 (Update backend)
                 if (string.IsNullOrEmpty(khachHangTheoSoDT.Email))
                 {
                     khachHangTheoSoDT.Email = khachHang.Email;
@@ -62,17 +58,7 @@ namespace QLBoutique.Controllers
                     khachHangTheoSoDT.TrangThai = string.IsNullOrEmpty(khachHang.TrangThai) ? "Hoạt động" : khachHang.TrangThai;
                     khachHangTheoSoDT.NgayDangKy = DateTime.Now;
 
-<<<<<<< HEAD
-                    // Hash mật khẩu và cập nhật
                     khachHangTheoSoDT.MatKhau = _passwordHasher.HashPassword(khachHangTheoSoDT, khachHang.MatKhau);
-=======
-                    //// Hash mật khẩu nếu có
-                    //if (!string.IsNullOrEmpty(khachHang.MatKhau))
-                    //{
-                    khachHangTheoSoDT.MatKhau = _passwordHasher.HashPassword(khachHangTheoSoDT, khachHang.MatKhau);
-                    //}
->>>>>>> dbd1ab9 (Update backend)
-
                     _context.KhachHang.Update(khachHangTheoSoDT);
                     await _context.SaveChangesAsync();
 
@@ -80,10 +66,6 @@ namespace QLBoutique.Controllers
                 }
                 else
                 {
-<<<<<<< HEAD
-=======
-                    // Số điện thoại đã tồn tại với email => tài khoản đã tạo trên web
->>>>>>> dbd1ab9 (Update backend)
                     return BadRequest("Tài khoản đã tồn tại. Xin hãy đăng nhập!");
                 }
             }
@@ -164,12 +146,8 @@ namespace QLBoutique.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllKhachHang()
         {
-<<<<<<< HEAD
-            return await _context.KhachHang.Where(k => k.TrangThai == "Hoạt động").ToListAsync();
-=======
             var khachHangs = await _context.KhachHang.Where(k => k.TrangThai == "Hoạt động").ToListAsync();
             return Ok(khachHangs);
->>>>>>> dbd1ab9 (Update backend)
         }
 
         // Lấy thông tin khách hàng theo mã
@@ -236,8 +214,6 @@ namespace QLBoutique.Controllers
 
             return Ok(new { message = "Đặt lại mật khẩu thành công." });
         }
-
-<<<<<<< HEAD
         // Quên mật khẩu - gửi email reset password
         [HttpPost("ForgotPassword")]
         public async Task<IActionResult> ForgotPassword([FromBody] string email)
@@ -288,10 +264,7 @@ namespace QLBoutique.Controllers
 
             return Ok("Đã gửi email đặt lại mật khẩu. Vui lòng kiểm tra hộp thư!");
         }
-    }
-
-}
-=======
+    
         [HttpPost("create")]
         public async Task<IActionResult> CreateKhachHang([FromBody] KhachHang kh)
         {
@@ -357,29 +330,29 @@ namespace QLBoutique.Controllers
 
             return CreatedAtAction(nameof(GetKhachHang), new { id = khachHang.MaKH }, khachHang);
         }
-        // GET: api/KhachHang/CheckSoDienThoai?soDienThoai=0123456789
-        [HttpGet("CheckSoDienThoai")]
-        public async Task<IActionResult> CheckSoDienThoai(string soDienThoai)
-        {
-            if (string.IsNullOrEmpty(soDienThoai))
-                return BadRequest("Vui lòng cung cấp số điện thoại.");
+        //// GET: api/KhachHang/CheckSoDienThoai?soDienThoai=0123456789
+        //[HttpGet("CheckSoDienThoai")]
+        //public async Task<IActionResult> CheckSoDienThoai(string soDienThoai)
+        //{
+        //    if (string.IsNullOrEmpty(soDienThoai))
+        //        return BadRequest("Vui lòng cung cấp số điện thoại.");
 
-            var khachHang = await _context.KhachHang
-                .FirstOrDefaultAsync(k => k.SoDienThoai == soDienThoai);
+        //    var khachHang = await _context.KhachHang
+        //        .FirstOrDefaultAsync(k => k.SoDienThoai == soDienThoai);
 
-            if (khachHang != null)
-            {
-                return Ok(new
-                {
-                    TonTai = true,
-                    DaCoEmail = !string.IsNullOrEmpty(khachHang.Email),
-                    MaKH = khachHang.MaKH,
-                    TenKH = khachHang.TenKH
-                });
-            }
+        //    if (khachHang != null)
+        //    {
+        //        return Ok(new
+        //        {
+        //            TonTai = true,
+        //            DaCoEmail = !string.IsNullOrEmpty(khachHang.Email),
+        //            MaKH = khachHang.MaKH,
+        //            TenKH = khachHang.TenKH
+        //        });
+        //    }
 
-            return Ok(new { TonTai = false });
-        }
+        //    return Ok(new { TonTai = false });
+        //}
 
         // Tìm kiếm theo số điện thoại khách hàng
         // GET: api/KhachHang/search?SDT=xxx
@@ -458,4 +431,3 @@ namespace QLBoutique.Controllers
 
     }
 }
->>>>>>> dbd1ab9 (Update backend)

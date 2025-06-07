@@ -2,13 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using QLBoutique.ClothingDbContext;
 using QLBoutique.Model;
-using System.Collections.Generic;
-using System.Linq;
-<<<<<<< HEAD
-=======
 using System.Security.Cryptography;
 using System.Text;
->>>>>>> dbd1ab9 (Update backend)
 using System.Threading.Tasks;
 
 namespace QLBoutique.Controllers
@@ -25,7 +20,6 @@ namespace QLBoutique.Controllers
         }
 
         [HttpGet]
-<<<<<<< HEAD
         public async Task<ActionResult<IEnumerable<NhanVien>>> GetNhanViens()
         {
             return await _context.NhanVien
@@ -48,41 +42,9 @@ namespace QLBoutique.Controllers
             return nhanVien;
         }
 
-        [HttpPost]
-        public async Task<ActionResult<NhanVien>> PostNhanVien(NhanVien nhanVien)
-        {
-            _context.NhanVien.Add(nhanVien);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetNhanVien), new { id = nhanVien.MaNV }, nhanVien);
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutNhanVien(string id, NhanVien nhanVien)
-        {
-            if (id != nhanVien.MaNV)
-                return BadRequest();
-
-            _context.Entry(nhanVien).State = EntityState.Modified;
-=======
-        public async Task<ActionResult<IEnumerable<Nhanvien>>> GetNhanViens()
-        {
-            return await _context.NhanVien.ToListAsync();
-        }
-
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Nhanvien>> GetNhanVien(string id)
-        {
-            var nhanvien = await _context.NhanVien.FindAsync(id);
-
-            if (nhanvien == null)
-                return NotFound();
-
-            return nhanvien;
-        }
-
         // ✅ Đã thêm mã hóa mật khẩu ở đây
         [HttpPost]
-        public async Task<IActionResult> PostNhanVien([FromBody] Nhanvien nhanvien)
+        public async Task<IActionResult> PostNhanVien([FromBody] NhanVien nhanvien)
         {
             if (nhanvien == null)
                 return BadRequest("Dữ liệu nhân viên không hợp lệ.");
@@ -106,13 +68,12 @@ namespace QLBoutique.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutNhanVien(string id, Nhanvien nhanvien)
+        public async Task<IActionResult> PutNhanVien(string id, NhanVien nhanvien)
         {
             if (id != nhanvien.MaNV)
                 return BadRequest();
 
             _context.Entry(nhanvien).State = EntityState.Modified;
->>>>>>> dbd1ab9 (Update backend)
 
             try
             {
@@ -120,11 +81,7 @@ namespace QLBoutique.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-<<<<<<< HEAD
                 if (!_context.NhanVien.Any(e => e.MaNV == id))
-=======
-                if (!NhanVienExists(id))
->>>>>>> dbd1ab9 (Update backend)
                     return NotFound();
                 else
                     throw;
@@ -133,18 +90,8 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
-<<<<<<< HEAD
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteNhanVien(string id)
-        {
-            var nhanVien = await _context.NhanVien.FindAsync(id);
-            if (nhanVien == null)
-                return NotFound();
-
-            _context.NhanVien.Remove(nhanVien);
-=======
         [HttpPut("Update/{maNV}")]
-        public async Task<IActionResult> UpdateNhanVien(string maNV, [FromBody] Nhanvien nhanVien)
+        public async Task<IActionResult> UpdateNhanVien(string maNV, [FromBody] NhanVien nhanVien)
         {
             if (maNV != nhanVien.MaNV)
                 return BadRequest("Mã nhân viên không khớp.");
@@ -190,14 +137,10 @@ namespace QLBoutique.Controllers
             }
 
             _context.NhanVien.Remove(nhanvien);
->>>>>>> dbd1ab9 (Update backend)
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
-<<<<<<< HEAD
-=======
-
 
         // ✅ Login với password đã mã hóa
         [HttpPost("login")]
@@ -206,7 +149,7 @@ namespace QLBoutique.Controllers
             if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
                 return BadRequest("Vui lòng nhập đầy đủ username và password");
 
-            var user = await _context.NhanVien.FirstOrDefaultAsync(nv => nv.Username == request.Username);
+            var user = await _context.NhanVien.FirstOrDefaultAsync(nv => nv.UserName == request.Username);
 
             if (user == null)
                 return Unauthorized("Sai tên đăng nhập hoặc mật khẩu");
@@ -219,7 +162,7 @@ namespace QLBoutique.Controllers
             return Ok(new
             {
                 user.MaNV,
-                user.Username
+                user.UserName
             });
         }
 
@@ -238,6 +181,5 @@ namespace QLBoutique.Controllers
         {
             return _context.NhanVien.Any(e => e.MaNV == id);
         }
->>>>>>> dbd1ab9 (Update backend)
     }
 }

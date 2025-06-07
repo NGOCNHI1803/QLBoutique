@@ -1,17 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-<<<<<<< HEAD
 using QLBoutique.ClothingDbContext;
 using QLBoutique.Model;
-=======
-using Microsoft.AspNetCore.Identity;
-using QLBoutique.Model;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using QLBoutique.ClothingDbContext;
-using LabManagement.Model;
->>>>>>> dbd1ab9 (Update backend)
 
 namespace QLBoutique.Controllers
 {
@@ -20,16 +10,12 @@ namespace QLBoutique.Controllers
     public class GioHangController : ControllerBase
     {
         private readonly BoutiqueDBContext _context;
-<<<<<<< HEAD
 
-=======
->>>>>>> dbd1ab9 (Update backend)
         public GioHangController(BoutiqueDBContext context)
         {
             _context = context;
         }
 
-<<<<<<< HEAD
         [HttpGet("khachhang/{maKH}")]
         public async Task<ActionResult<IEnumerable<GioHang>>> GetGioHangByKhachHang(string maKH)
         {
@@ -174,35 +160,9 @@ namespace QLBoutique.Controllers
             {
                 return StatusCode(500, $"Lỗi khi xóa giỏ hàng: {ex.Message}");
             }
-=======
-        // GET: api/GioHang
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<GioHang>>> GetAll()
-        {
-            return await _context.GioHang.ToListAsync();
-        }
-
-        // POST: api/GioHang
-        [HttpPost]
-        public async Task<ActionResult<GioHang>> AddGioHang([FromBody] GioHang gioHang)
-        {
-            if (gioHang == null)
-            {
-                return BadRequest("Dữ liệu giỏ hàng không hợp lệ.");
-            }
-
-            _context.GioHang.Add(gioHang);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetAll), new { id = gioHang.MaGioHang }, gioHang);
->>>>>>> dbd1ab9 (Update backend)
         }
 
 
     }
-<<<<<<< HEAD
 
 }
-=======
-}
->>>>>>> dbd1ab9 (Update backend)

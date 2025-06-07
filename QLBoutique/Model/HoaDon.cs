@@ -51,7 +51,7 @@ namespace QLBoutique.Model
         public virtual KhachHang? KhachHang { get; set; }
 
         [ForeignKey("MaNV")]
-        public virtual Nhanvien? Nhanvien { get; set; }
+        public virtual NhanVien? Nhanvien { get; set; }
 
         [ForeignKey("MaKM")]
         public virtual KhuyenMai? KhuyenMai { get; set; }
