@@ -48,19 +48,24 @@ namespace QLBoutique.ClothingDbContext
             modelBuilder.Entity<NhanVien>(entity =>
             {
                 entity.HasKey(e => e.MaNV);
+            
                 entity.Property(e => e.HoTen).HasMaxLength(100);
                 entity.Property(e => e.DiaChi).HasMaxLength(200);
                 entity.Property(e => e.SDT).HasMaxLength(10).IsFixedLength();
                 entity.Property(e => e.UserName).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
-
+            
+                // Thiết lập quan hệ với bảng QuyenHan
                 entity.HasOne(e => e.QuyenHan)
                       .WithMany()
-                      .HasForeignKey(e => e.MaQuyen);
-
+                      .HasForeignKey(e => e.MaQuyen)
+                      .HasConstraintName("FK_NhanVien_QuyenHan");
+            
+                // Thiết lập quan hệ với bảng ChucVu
                 entity.HasOne(e => e.ChucVu)
                       .WithMany()
-                      .HasForeignKey(e => e.MaCV);
+                      .HasForeignKey(e => e.MaCV)
+                      .HasConstraintName("FK_NhanVien_ChucVu");
             });
 
             modelBuilder.Entity<LoaiSanPham>(entity =>
