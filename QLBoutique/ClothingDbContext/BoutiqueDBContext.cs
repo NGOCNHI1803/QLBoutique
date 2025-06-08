@@ -20,8 +20,8 @@ namespace QLBoutique.ClothingDbContext
         public DbSet<LoaiKhachHang> LoaiKhachHang { get; set; }
         public DbSet<ChiTietGioHang> ChiTietGioHang { get; set; }
         public DbSet<NhanVien> NhanVien { get; set; }
-        public DbSet<PhieuNhap> PhieuNhap { get; set; }
-        public DbSet<ChiTietPhieuNhap> ChiTietPhieuNhap { get; set; }
+        public DbSet<PhieuNhap> PhieuNhaps { get; set; }
+        public DbSet<ChiTietPhieuNhap> ChiTietPhieuNhaps { get; set; }
 
         public DbSet<KhuyenMai> KhuyenMai { get; set; }
         public DbSet<LoaiKhuyenMai> LoaiKhuyenMai { get; set; }
@@ -634,7 +634,7 @@ namespace QLBoutique.ClothingDbContext
                         .HasForeignKey(e => e.MaTT)
                         .HasConstraintName("FK_HoaDon_PhuongThucThanhToan");
                 });
-
+               
         }
     }
 }
