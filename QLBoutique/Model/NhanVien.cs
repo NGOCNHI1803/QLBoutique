@@ -18,4 +18,5 @@
         public virtual QuyenHan? QuyenHan { get; set; }
         public virtual ChucVu? ChucVu { get; set; }
     }
+
 }

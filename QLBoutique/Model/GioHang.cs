@@ -1,22 +1,31 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace QLBoutique.Model
 {
+    [Table("GIOHANG")]
     public class GioHang
     {
-        public string? MaGioHang { get; set; } // Mã giỏ hàng (MAGIOHANG)
+        [Key]
+        [Column("MAGIOHANG")]
+        [StringLength(20)]
+        public string MaGioHang { get; set; }
 
-        public string? MaKhachHang { get; set; } // Mã khách hàng (MAKH)
+        [Column("MAKH")]
+        [StringLength(100)]
+        public string? MaKH { get; set; }
 
-        public DateTime? NgayTao { get; set; }  // Ngày tạo (NGAYTAO)
+        [Column("NGAYTAO")]
+        public DateTime NgayTao { get; set; }
 
-        public DateTime? NgayCapNhat { get; set; } 
-        public int TrangThai { get; set; } = 1; // 1: còn hiệu lực, 0: đã đặt hàng hoặc hủy
+        [Column("NGAYCAPNHAT")]
+        public DateTime NgayCapNhat { get; set; }
 
+        [Column("TRANGTHAI")]
+        public int? TrangThai{ get; set; }
         // Navigation property tới bảng KhachHang
         [ForeignKey("MaKhachHang")]
-        [JsonIgnore]
-        public KhachHang? KhachHang { get; set; }
+        public virtual KhachHang? KhachHang { get; set; }
     }
 }

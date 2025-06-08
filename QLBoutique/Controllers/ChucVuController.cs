@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QLBoutique.ClothingDbContext;
 using QLBoutique.Model;
@@ -46,7 +46,6 @@ namespace QLBoutique.Controllers
         {
             _context.ChucVu.Add(chucVu);
             await _context.SaveChangesAsync();
-
             return CreatedAtAction(nameof(GetChucVu), new { id = chucVu.MaCV }, chucVu);
         }
 
@@ -82,7 +81,7 @@ namespace QLBoutique.Controllers
 
         // DELETE: api/ChucVu/{id}
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteChucVu(string id)
+        public async Task<IActionResult> DeleteChucVu(string id)  
         {
             var chucVu = await _context.ChucVu.FindAsync(id);
             if (chucVu == null)

@@ -2,8 +2,8 @@
 using Microsoft.EntityFrameworkCore;
 using QLBoutique.ClothingDbContext;
 using QLBoutique.Model;
-using System.Collections.Generic;
-using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace QLBoutique.Controllers
@@ -42,21 +42,38 @@ namespace QLBoutique.Controllers
             return nhanVien;
         }
 
+        // ✅ Đã thêm mã hóa mật khẩu ở đây
         [HttpPost]
-        public async Task<ActionResult<NhanVien>> PostNhanVien(NhanVien nhanVien)
+        public async Task<IActionResult> PostNhanVien([FromBody] NhanVien nhanvien)
         {
-            _context.NhanVien.Add(nhanVien);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetNhanVien), new { id = nhanVien.MaNV }, nhanVien);
+            if (nhanvien == null)
+                return BadRequest("Dữ liệu nhân viên không hợp lệ.");
+
+            if (string.IsNullOrEmpty(nhanvien.HoTen) || string.IsNullOrEmpty(nhanvien.DiaChi))
+                return BadRequest("Họ tên và địa chỉ là bắt buộc.");
+
+            // ✅ Gán Username và Password theo quyền + mã hóa mật khẩu
+            string hoTenLower = nhanvien.HoTen.ToLower().Replace(" ", "");
+
+            try
+            {
+                _context.NhanVien.Add(nhanvien);
+                await _context.SaveChangesAsync();
+                return CreatedAtAction(nameof(GetNhanVien), new { id = nhanvien.MaNV }, nhanvien);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Lỗi khi thêm nhân viên: " + ex.Message);
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutNhanVien(string id, NhanVien nhanVien)
+        public async Task<IActionResult> PutNhanVien(string id, NhanVien nhanvien)
         {
-            if (id != nhanVien.MaNV)
+            if (id != nhanvien.MaNV)
                 return BadRequest();
 
-            _context.Entry(nhanVien).State = EntityState.Modified;
+            _context.Entry(nhanvien).State = EntityState.Modified;
 
             try
             {
@@ -73,17 +90,96 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
+        [HttpPut("Update/{maNV}")]
+        public async Task<IActionResult> UpdateNhanVien(string maNV, [FromBody] NhanVien nhanVien)
+        {
+            if (maNV != nhanVien.MaNV)
+                return BadRequest("Mã nhân viên không khớp.");
+
+            var existingNV = await _context.NhanVien.FindAsync(maNV);
+            if (existingNV == null)
+                return NotFound("Không tìm thấy nhân viên.");
+
+            existingNV.HoTen = nhanVien.HoTen;
+            existingNV.NgaySinh = nhanVien.NgaySinh;
+            existingNV.GioiTinh = nhanVien.GioiTinh;
+            existingNV.DiaChi = nhanVien.DiaChi;
+            existingNV.SDT = nhanVien.SDT;
+            existingNV.Email = nhanVien.Email;
+            existingNV.NgayVaoLam = nhanVien.NgayVaoLam;
+            existingNV.MaCV = nhanVien.MaCV;
+            existingNV.MaQuyen = nhanVien.MaQuyen;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok("Cập nhật nhân viên thành công.");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Lỗi khi cập nhật nhân viên: " + ex.Message);
+            }
+        }
+
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNhanVien(string id)
         {
-            var nhanVien = await _context.NhanVien.FindAsync(id);
-            if (nhanVien == null)
+            var nhanvien = await _context.NhanVien.FindAsync(id);
+            if (nhanvien == null)
                 return NotFound();
 
-            _context.NhanVien.Remove(nhanVien);
+            // Kiểm tra nhân viên có hóa đơn liên quan không
+            bool hasRelatedHoaDon = await _context.HoaDon.AnyAsync(hd => hd.MaNV == id);
+
+            if (hasRelatedHoaDon)
+            {
+                return BadRequest("Không thể xóa nhân viên này vì đang có hóa đơn liên quan.");
+            }
+
+            _context.NhanVien.Remove(nhanvien);
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        // ✅ Login với password đã mã hóa
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] QLBoutique.Model.LoginRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
+                return BadRequest("Vui lòng nhập đầy đủ username và password");
+
+            var user = await _context.NhanVien.FirstOrDefaultAsync(nv => nv.UserName == request.Username);
+
+            if (user == null)
+                return Unauthorized("Sai tên đăng nhập hoặc mật khẩu");
+
+            string hashedInput = HashPassword(request.Password);
+
+            if (user.Password != hashedInput)
+                return Unauthorized("Sai tên đăng nhập hoặc mật khẩu");
+
+            return Ok(new
+            {
+                user.MaNV,
+                user.UserName
+            });
+        }
+
+        // ✅ Hàm hash mật khẩu
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var bytes = Encoding.UTF8.GetBytes(password);
+                var hashBytes = sha256.ComputeHash(bytes);
+                return Convert.ToBase64String(hashBytes);
+            }
+        }
+
+        private bool NhanVienExists(string id)
+        {
+            return _context.NhanVien.Any(e => e.MaNV == id);
         }
     }
 }

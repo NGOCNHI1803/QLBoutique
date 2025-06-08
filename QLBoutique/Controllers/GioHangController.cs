@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QLBoutique.ClothingDbContext;
 using QLBoutique.Model;
@@ -16,30 +16,26 @@ namespace QLBoutique.Controllers
             _context = context;
         }
 
-        // GET: api/GioHang/khachhang/{maKH}
         [HttpGet("khachhang/{maKH}")]
         public async Task<ActionResult<IEnumerable<GioHang>>> GetGioHangByKhachHang(string maKH)
         {
             var gioHangList = await _context.GioHang
                 .Include(g => g.KhachHang)
-                .Where(g => g.MaKhachHang == maKH)
+                .Where(g => g.MaKH == maKH)
                 .ToListAsync();
-
-            if (!gioHangList.Any())
-            {
-                return NotFound("Giỏ hàng trống hoặc không tồn tại.");
-            }
 
             // Lọc giỏ hàng chỉ chứa các mục còn hiệu lực (TRANGTHAI = 1)
             var validGioHang = gioHangList.Where(g => g.TrangThai == 1).ToList();
 
             if (!validGioHang.Any())
             {
-                return NotFound("Tất cả các mục trong giỏ hàng đã bị xóa hoặc không còn hiệu lực.");
+                // Trả về danh sách rỗng thay vì lỗi chuỗi text
+                return Ok(new List<GioHang>());
             }
 
             return Ok(validGioHang);
         }
+
 
         // POST: api/GioHang
         [HttpPost]
@@ -57,7 +53,7 @@ namespace QLBoutique.Controllers
             _context.GioHang.Add(gioHang);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetGioHangByKhachHang), new { maKH = gioHang.MaKhachHang }, gioHang);
+            return CreatedAtAction(nameof(GetGioHangByKhachHang), new { maKH = gioHang.MaKH }, gioHang);
         }
 
         // PUT: api/GioHang/{maGioHang}
@@ -75,7 +71,7 @@ namespace QLBoutique.Controllers
                 return NotFound("Giỏ hàng không tồn tại.");
             }
 
-            gioHang.MaKhachHang = updatedGioHang.MaKhachHang;
+            gioHang.MaKH = updatedGioHang.MaKH;
             gioHang.NgayCapNhat = DateTime.Now;
             gioHang.TrangThai = updatedGioHang.TrangThai;
 
@@ -100,21 +96,21 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
-        // DELETE: api/GioHang/{maGioHang}
-        [HttpDelete("{maGioHang}")]
-        public async Task<IActionResult> DeleteGioHang(string maGioHang)
-        {
-            var gioHang = await _context.GioHang.FindAsync(maGioHang);
-            if (gioHang == null)
-            {
-                return NotFound("Không tìm thấy giỏ hàng.");
-            }
+        //// DELETE: api/GioHang/{maGioHang}
+        //[HttpDelete("{maGioHang}")]
+        //public async Task<IActionResult> DeleteGioHang(string maGioHang)
+        //{
+        //    var gioHang = await _context.GioHang.FindAsync(maGioHang);
+        //    if (gioHang == null)
+        //    {
+        //        return NotFound("Không tìm thấy giỏ hàng.");
+        //    }
 
-            _context.GioHang.Remove(gioHang);
-            await _context.SaveChangesAsync();
+        //    _context.GioHang.Remove(gioHang);
+        //    await _context.SaveChangesAsync();
 
-            return NoContent();
-        }
+        //    return NoContent();
+        //}
 
         // GET: api/GioHang/exist/{maGioHang}
         [HttpGet("exist/{maGioHang}")]
@@ -128,5 +124,45 @@ namespace QLBoutique.Controllers
         {
             return _context.GioHang.Any(e => e.MaGioHang == maGioHang);
         }
+        // DELETE: api/GioHang/{maGioHang}
+        [HttpDelete("{maGioHang}")]
+        public async Task<IActionResult> DeleteGioHang(string maGioHang)
+        {
+            // Bước 1: Tìm giỏ hàng theo mã
+            var gioHang = await _context.GioHang.FirstOrDefaultAsync(g => g.MaGioHang == maGioHang);
+            if (gioHang == null)
+            {
+                return NotFound("Không tìm thấy giỏ hàng.");
+            }
+
+            try
+            {
+                // Bước 2: Lấy tất cả chi tiết giỏ hàng liên quan đến mã giỏ hàng
+                var chiTietList = await _context.ChiTietGioHang
+                    .Where(c => c.MaGioHang == maGioHang)
+                    .ToListAsync();
+
+                // Bước 3: Xóa toàn bộ chi tiết giỏ hàng trước
+                if (chiTietList.Any())
+                {
+                    _context.ChiTietGioHang.RemoveRange(chiTietList);
+                }
+
+                // Bước 4: Xóa bản ghi giỏ hàng
+                _context.GioHang.Remove(gioHang);
+
+                // Bước 5: Lưu thay đổi
+                await _context.SaveChangesAsync();
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi khi xóa giỏ hàng: {ex.Message}");
+            }
+        }
+
+
     }
+
 }

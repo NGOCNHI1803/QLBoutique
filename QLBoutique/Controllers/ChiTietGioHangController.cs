@@ -30,7 +30,8 @@ namespace QLBoutique.Controllers
                 .ToListAsync();
 
             if (chiTiet == null || chiTiet.Count == 0)
-                return Ok("Giỏ hàng trống");
+                return Ok(new { message = "Giỏ hàng trống", data = new List<ChiTietGioHang>() });
+
 
             // Xử lý sản phẩm hết hiệu lực hoặc đã đặt
             var chiTietHieuLuc = new List<ChiTietGioHang>();
@@ -56,41 +57,7 @@ namespace QLBoutique.Controllers
             return Ok(chiTietHieuLuc);
         }
 
-        // POST: api/ChiTietGioHang
-        [HttpPost]
-        public async Task<ActionResult> AddToCart(ChiTietGioHang item)
-        {
-            if (item == null || item.MaGioHang == null || item.MaBienThe == null || item.SoLuong <= 0)
-                return BadRequest("Thông tin không hợp lệ");
-
-            var bienThe = await _context.ChiTietSanPham.FindAsync(item.MaBienThe);
-            if (bienThe == null || bienThe.TrangThai != 1)
-                return BadRequest("Sản phẩm không tồn tại hoặc không còn hiệu lực");
-
-            if (bienThe.TonKho < item.SoLuong)
-                return BadRequest("Không đủ hàng trong kho");
-
-            var existingItem = await _context.ChiTietGioHang
-                .FirstOrDefaultAsync(c => c.MaGioHang == item.MaGioHang && c.MaBienThe == item.MaBienThe);
-
-            if (existingItem != null)
-            {
-                int tongSoLuong = existingItem.SoLuong + item.SoLuong;
-                if (tongSoLuong > bienThe.TonKho)
-                    return BadRequest("Số lượng vượt quá tồn kho");
-
-                existingItem.SoLuong = tongSoLuong;
-            }
-            else
-            {
-                _context.ChiTietGioHang.Add(item);
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok("Thêm vào giỏ hàng thành công");
-        }
-
-        // PUT: api/ChiTietGioHang
+        
         [HttpPut]
         public async Task<ActionResult> UpdateQuantity(ChiTietGioHang item)
         {
@@ -161,6 +128,82 @@ namespace QLBoutique.Controllers
                 return NotFound("Không tìm thấy biến thể sản phẩm");
 
             return Ok(bienThe);
+        }
+        [HttpPost("addToCart")]
+        public async Task<IActionResult> AddProductToCart([FromBody] AddToCartRequest request)
+        {
+            if (request == null || string.IsNullOrEmpty(request.MaKhachHang) || string.IsNullOrEmpty(request.MaBienThe) || request.SoLuong < 1)
+                return BadRequest("Dữ liệu không hợp lệ.");
+
+            try
+            {
+                // Bước 1: Tìm giỏ hàng còn hiệu lực của khách hàng
+                var gioHang = await _context.GioHang
+                    .FirstOrDefaultAsync(g => g.MaKH == request.MaKhachHang && g.TrangThai == 1);
+
+                // Bước 2: Nếu chưa có giỏ thì tạo mới
+                if (gioHang == null)
+                {
+                    gioHang = new GioHang
+                    {
+                        MaGioHang = Guid.NewGuid().ToString("N").Substring(0, 20), // tạo mã 20 ký tự
+                        MaKH = request.MaKhachHang,
+                        NgayTao = DateTime.Now,
+                        NgayCapNhat = DateTime.Now,
+                        TrangThai = 1
+                    };
+
+                    _context.GioHang.Add(gioHang);
+                    await _context.SaveChangesAsync(); // Lưu để có mã giỏ hàng
+                }
+
+                // Bước 3: Kiểm tra biến thể sản phẩm đã có trong giỏ chưa
+                var chiTiet = await _context.ChiTietGioHang
+                    .FirstOrDefaultAsync(ct => ct.MaGioHang == gioHang.MaGioHang && ct.MaBienThe == request.MaBienThe);
+
+                if (chiTiet != null)
+                {
+                    // Cập nhật số lượng cộng dồn
+                    chiTiet.SoLuong += request.SoLuong;
+                    _context.Entry(chiTiet).State = EntityState.Modified;
+                }
+                else
+                {
+                    // Thêm mới chi tiết giỏ hàng
+                    chiTiet = new ChiTietGioHang
+                    {
+                        MaGioHang = gioHang.MaGioHang,
+                        MaBienThe = request.MaBienThe,
+                        SoLuong = request.SoLuong
+                    };
+                    _context.ChiTietGioHang.Add(chiTiet);
+                }
+
+                // Cập nhật lại ngày cập nhật giỏ hàng
+                gioHang.NgayCapNhat = DateTime.Now;
+                _context.Entry(gioHang).State = EntityState.Modified;
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    Message = "Thêm sản phẩm vào giỏ hàng thành công",
+                    MaGioHang = gioHang.MaGioHang,
+                    ChiTiet = chiTiet
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Lỗi khi thêm sản phẩm vào giỏ hàng: {ex.Message}");
+            }
+        }
+
+        // Model nhận request
+        public class AddToCartRequest
+        {
+            public string? MaKhachHang { get; set; }
+            public string? MaBienThe { get; set; }
+            public int SoLuong { get; set; }
         }
 
 
