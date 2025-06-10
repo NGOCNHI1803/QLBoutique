@@ -19,20 +19,46 @@ namespace QLBoutique.Controllers
             _context = context;
         }
 
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<NhanVien>>> GetNhanViens()
+        //{
+        //    return await _context.NhanVien
+        //                         .Include(nv => nv.QuyenHan)
+        //                         .Include(nv => nv.ChucVu)
+        //                         .ToListAsync();
+        //}
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<NhanVien>>> GetNhanViens()
+        public async Task<IActionResult> GetAllNhanVien()
         {
-            return await _context.NhanVien
-                                 .Include(nv => nv.QuyenHan)
-                                 .Include(nv => nv.ChucVu)
-                                 .ToListAsync();
+            var list = await _context.NhanVien
+                .Include(nv => nv.Quyen)
+                .Include(nv => nv.ChucVu)
+                .Select(nv => new
+                {
+                    nv.MaNV,
+                    nv.HoTen,
+                    nv.NgaySinh,
+                    nv.GioiTinh,
+                    nv.DiaChi,
+                    nv.MaQuyen,
+                    TenQuyen = nv.Quyen != null ? nv.Quyen.TenQuyen : null,
+                    nv.MaCV,
+                    TenChucVu = nv.ChucVu != null ? nv.ChucVu.TenCV : null,
+                    nv.SDT,
+                    nv.Email,
+                    nv.NgayVaoLam
+                })
+                .ToListAsync();
+
+            return Ok(list);
         }
+
 
         [HttpGet("{id}")]
         public async Task<ActionResult<NhanVien>> GetNhanVien(string id)
         {
             var nhanVien = await _context.NhanVien
-                                         .Include(nv => nv.QuyenHan)
+                                         .Include(nv => nv.Quyen)
                                          .Include(nv => nv.ChucVu)
                                          .FirstOrDefaultAsync(nv => nv.MaNV == id);
 
@@ -142,29 +168,41 @@ namespace QLBoutique.Controllers
             return NoContent();
         }
 
-        // ✅ Login với password đã mã hóa
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] QLBoutique.Model.LoginRequest request)
         {
             if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
                 return BadRequest("Vui lòng nhập đầy đủ username và password");
 
-            var user = await _context.NhanVien.FirstOrDefaultAsync(nv => nv.UserName == request.Username);
+            var user = await _context.NhanVien
+                .AsNoTracking()
+                .Where(nv => nv.Username == request.Username)
+                .Select(nv => new
+                {
+                    nv.MaNV,
+                    nv.Username,
+                    nv.Password,
+                    nv.MaQuyen,
+                    nv.HoTen
+                })
+                .FirstOrDefaultAsync();
 
             if (user == null)
                 return Unauthorized("Sai tên đăng nhập hoặc mật khẩu");
 
             string hashedInput = HashPassword(request.Password);
-
             if (user.Password != hashedInput)
                 return Unauthorized("Sai tên đăng nhập hoặc mật khẩu");
 
             return Ok(new
             {
                 user.MaNV,
-                user.UserName
+                user.Username,
+                user.MaQuyen,
+                user.HoTen
             });
         }
+
 
         // ✅ Hàm hash mật khẩu
         private string HashPassword(string password)

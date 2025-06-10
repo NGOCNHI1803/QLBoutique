@@ -21,7 +21,7 @@ namespace QLBoutique.Controllers
         {
             var gioHangList = await _context.GioHang
                 .Include(g => g.KhachHang)
-                .Where(g => g.MaKhachHang == maKH)
+                .Where(g => g.MaKH == maKH)
                 .ToListAsync();
 
             // Lọc giỏ hàng chỉ chứa các mục còn hiệu lực (TRANGTHAI = 1)
@@ -53,7 +53,7 @@ namespace QLBoutique.Controllers
             _context.GioHang.Add(gioHang);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetGioHangByKhachHang), new { maKH = gioHang.MaKhachHang }, gioHang);
+            return CreatedAtAction(nameof(GetGioHangByKhachHang), new { maKH = gioHang.MaKH }, gioHang);
         }
 
         // PUT: api/GioHang/{maGioHang}
@@ -71,7 +71,7 @@ namespace QLBoutique.Controllers
                 return NotFound("Giỏ hàng không tồn tại.");
             }
 
-            gioHang.MaKhachHang = updatedGioHang.MaKhachHang;
+            gioHang.MaKH = updatedGioHang.MaKH;
             gioHang.NgayCapNhat = DateTime.Now;
             gioHang.TrangThai = updatedGioHang.TrangThai;
 

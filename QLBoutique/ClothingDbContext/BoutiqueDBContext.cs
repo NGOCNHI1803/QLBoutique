@@ -44,24 +44,32 @@ namespace QLBoutique.ClothingDbContext
                 entity.Property(e => e.MoTa).HasMaxLength(200);
             });
 
-            // Cấu hình bảng NhanVien
             modelBuilder.Entity<NhanVien>(entity =>
             {
                 entity.HasKey(e => e.MaNV);
+
                 entity.Property(e => e.HoTen).HasMaxLength(100);
                 entity.Property(e => e.DiaChi).HasMaxLength(200);
                 entity.Property(e => e.SDT).HasMaxLength(10).IsFixedLength();
-                entity.Property(e => e.UserName).IsRequired().HasMaxLength(50);
+                entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
+                entity.Property(e => e.MaQuyen).HasColumnName("MaQuyen");
+                entity.Property(e => e.MaCV).HasColumnName("MaCV");
 
-                entity.HasOne(e => e.QuyenHan)
+                entity.HasOne(e => e.Quyen)
                       .WithMany()
-                      .HasForeignKey(e => e.MaQuyen);
+                      .HasForeignKey(e => e.MaQuyen)
+                      .HasPrincipalKey(qh => qh.MaQuyen)  // xác định khóa chính bên QuyenHan
+                      .HasConstraintName("FK_NhanVien_QuyenHan");
 
                 entity.HasOne(e => e.ChucVu)
                       .WithMany()
-                      .HasForeignKey(e => e.MaCV);
+                      .HasForeignKey(e => e.MaCV)
+                      .HasPrincipalKey(cv => cv.MaCV)     // khóa chính bên ChucVu
+                      .HasConstraintName("FK_NhanVien_ChucVu");
             });
+
+
 
             modelBuilder.Entity<LoaiSanPham>(entity =>
             {

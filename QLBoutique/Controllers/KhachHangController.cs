@@ -427,7 +427,26 @@ namespace QLBoutique.Controllers
                 return NotFound("Không tìm thấy khách hàng.");
 
             return Ok(new { MaKH = khachHang.MaKH });
+        
         }
+        
+        // DELETE: /KhachHang/Delete/{maKH}
+        [HttpDelete("Delete/{maKH}")]
+        public async Task<IActionResult> DeleteCustomer(string maKH)
+        {
+            var customer = await _context.KhachHang.FindAsync(maKH);
+
+            if (customer == null)
+            {
+                return NotFound(new { message = "Không tìm thấy khách hàng cần xóa." });
+            }
+
+            _context.KhachHang.Remove(customer);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Xóa khách hàng thành công." });
+        }
+
 
     }
 }
