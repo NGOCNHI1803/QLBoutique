@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace QLBoutique.Model
 {
@@ -29,13 +30,16 @@ namespace QLBoutique.Model
 
         public int TrangThai { get; set; } = 1;
 
-        // Điều hướng (Navigation properties)
+        // Navigation property
+        [JsonIgnore] // Không trả ra JSON
         [ForeignKey("MaNCC")]
         public virtual NhaCungCap? NhaCungCap { get; set; }
 
+        [JsonIgnore]
         [ForeignKey("MaNV")]
         public virtual NhanVien? NhanVien { get; set; }
 
+        [JsonIgnore]
         public virtual ICollection<ChiTietPhieuNhap>? ChiTietPhieuNhaps { get; set; }
     }
 }

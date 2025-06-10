@@ -54,7 +54,7 @@ namespace QLBoutique.Controllers
                     khachHangTheoSoDT.DiaChi = khachHang.DiaChi;
                     khachHangTheoSoDT.NgaySinh = khachHang.NgaySinh;
                     khachHangTheoSoDT.GhiChu = string.IsNullOrEmpty(khachHang.GhiChu) ? "Khách hàng mới" : khachHang.GhiChu;
-                    khachHangTheoSoDT.MaLoaiKH = string.IsNullOrEmpty(khachHang.MaLoaiKH) ? "KHMOI" : khachHang.MaLoaiKH;
+                    khachHangTheoSoDT.MaLoaiKH = string.IsNullOrEmpty(khachHang.MaLoaiKH) ? "KHM" : khachHang.MaLoaiKH;
                     khachHangTheoSoDT.TrangThai = string.IsNullOrEmpty(khachHang.TrangThai) ? "Hoạt động" : khachHang.TrangThai;
                     khachHangTheoSoDT.NgayDangKy = DateTime.Now;
 
@@ -252,7 +252,7 @@ namespace QLBoutique.Controllers
             try
             {
                 await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-                await client.AuthenticateAsync("phanthithanhnga1303@gmail.com", ""); 
+                await client.AuthenticateAsync("phanthithanhnga1303@gmail.com", "chgijvbkajpjdilh"); 
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
             }
