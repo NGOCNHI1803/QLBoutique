@@ -1,4 +1,4 @@
-﻿using QLBoutique.Model;
+using QLBoutique.Model;
 using Microsoft.EntityFrameworkCore;
 using LabManagement.Model;
 
@@ -47,17 +47,11 @@ namespace QLBoutique.ClothingDbContext
             modelBuilder.Entity<NhanVien>(entity =>
             {
                 entity.HasKey(e => e.MaNV);
-<<<<<<< HEAD
-
-=======
-            
->>>>>>> 3b7916916ed33d47459661c5d28fae2dcb81dfdd
                 entity.Property(e => e.HoTen).HasMaxLength(100);
                 entity.Property(e => e.DiaChi).HasMaxLength(200);
                 entity.Property(e => e.SDT).HasMaxLength(10).IsFixedLength();
                 entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
-<<<<<<< HEAD
                 entity.Property(e => e.MaQuyen).HasColumnName("MaQuyen");
                 entity.Property(e => e.MaCV).HasColumnName("MaCV");
 
@@ -70,21 +64,7 @@ namespace QLBoutique.ClothingDbContext
                 entity.HasOne(e => e.ChucVu)
                       .WithMany()
                       .HasForeignKey(e => e.MaCV)
-                      .HasPrincipalKey(cv => cv.MaCV)     // khóa chính bên ChucVu
-=======
-            
-                // Thiết lập quan hệ với bảng QuyenHan
-                entity.HasOne(e => e.QuyenHan)
-                      .WithMany()
-                      .HasForeignKey(e => e.MaQuyen)
-                      .HasConstraintName("FK_NhanVien_QuyenHan");
-            
-                // Thiết lập quan hệ với bảng ChucVu
-                entity.HasOne(e => e.ChucVu)
-                      .WithMany()
-                      .HasForeignKey(e => e.MaCV)
->>>>>>> 3b7916916ed33d47459661c5d28fae2dcb81dfdd
-                      .HasConstraintName("FK_NhanVien_ChucVu");
+                      .HasPrincipalKey(cv => cv.MaCV);     
             });
 
 
