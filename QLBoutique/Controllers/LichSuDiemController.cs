@@ -25,7 +25,7 @@ namespace QLBoutique.Controllers
                 return BadRequest("Mã khách hàng không hợp lệ.");
 
             // Tìm bản ghi mới nhất của khách hàng đó
-            var lichSu = await _context.LichSuDiems
+            var lichSu = await _context.LichSuDiem
                 .Where(x => x.MaKH == maKH)
                 .OrderByDescending(x => x.Ngay)
                 .FirstOrDefaultAsync();

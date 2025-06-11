@@ -66,5 +66,8 @@ namespace QLBoutique.Model
         public string? ResetPasswordToken { get; set; }
         public DateTime? ResetPasswordExpiry { get; set; }
 
+        public ICollection<DiaChiKhachHang> DiaChiKhachHangs { get; set; }
+
+
     }
 }

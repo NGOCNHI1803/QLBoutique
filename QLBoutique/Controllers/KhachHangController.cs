@@ -399,7 +399,7 @@ namespace QLBoutique.Controllers
             if (khachHang == null)
                 return NotFound("Không tìm thấy khách hàng.");
 
-            var tongDiem = await _context.LichSuDiems.AsNoTracking()
+            var tongDiem = await _context.LichSuDiem.AsNoTracking()
                 .Where(d => d.MaKH == khachHang.MaKH)
                 .SumAsync(d => (int?)d.Diem) ?? 0;
 

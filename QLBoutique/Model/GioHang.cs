@@ -25,7 +25,7 @@ namespace QLBoutique.Model
         [Column("TRANGTHAI")]
         public int? TrangThai{ get; set; }
         // Navigation property tới bảng KhachHang
-        [ForeignKey("MaKhachHang")]
+        [ForeignKey("MaKH")]
         public virtual KhachHang? KhachHang { get; set; }
     }
 }
