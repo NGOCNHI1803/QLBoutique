@@ -25,10 +25,15 @@ namespace QLBoutique.Controllers
             if (string.IsNullOrEmpty(maKH))
                 return BadRequest("Mã khách hàng không hợp lệ.");
 
+<<<<<<< HEAD
             if (request == null || request.Diem < 0)
                 return BadRequest("Điểm sử dụng không hợp lệ.");
 
             var lichSu = await _context.LichSuDiems
+=======
+            // Tìm bản ghi mới nhất của khách hàng đó
+            var lichSu = await _context.LichSuDiem
+>>>>>>> 55807bd3bafc46dd83db3d3e7badd936e740ced9
                 .Where(x => x.MaKH == maKH)
                 .OrderByDescending(x => x.Ngay)
                 .FirstOrDefaultAsync();

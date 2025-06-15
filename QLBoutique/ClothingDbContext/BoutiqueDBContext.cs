@@ -1,4 +1,4 @@
-﻿using QLBoutique.Model;
+using QLBoutique.Model;
 using Microsoft.EntityFrameworkCore;
 using LabManagement.Model;
 
@@ -20,14 +20,25 @@ namespace QLBoutique.ClothingDbContext
         public DbSet<LoaiKhachHang> LoaiKhachHang { get; set; }
         public DbSet<ChiTietGioHang> ChiTietGioHang { get; set; }
         public DbSet<NhanVien> NhanVien { get; set; }
+<<<<<<< HEAD
         public DbSet<PhieuNhap> PhieuNhaps { get; set; }
         public DbSet<ChiTietPhieuNhap> ChiTietPhieuNhaps { get; set; }
         public DbSet<ChiTietHoaDon> ChiTietHoaDon { get; set; }
+=======
+        public DbSet<PhieuNhap> PhieuNhap { get; set; }
+        public DbSet<ChiTietPhieuNhap> ChiTietPhieuNhap { get; set; }
+
+>>>>>>> 55807bd3bafc46dd83db3d3e7badd936e740ced9
         public DbSet<KhuyenMai> KhuyenMai { get; set; }
         public DbSet<LoaiKhuyenMai> LoaiKhuyenMai { get; set; }
-        public DbSet<LichSuDiem> LichSuDiems { get; set; }
+        public DbSet<LichSuDiem> LichSuDiem { get; set; }
         public DbSet<PhuongThucThanhToan> PhuongThucThanhToan { get; set; }
         public DbSet<HoaDon> HoaDon { get; set; }
+        public DbSet<ChiTietHoaDon> ChiTietHoaDon { get; set; }
+        public DbSet<DiaChiKhachHang> DiaChiKhachHang { get; set; }
+        public DbSet<DonViVanChuyen> DonViVanChuyen { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -37,7 +48,7 @@ namespace QLBoutique.ClothingDbContext
                 entity.HasKey(e => e.MaCV);
                 entity.Property(e => e.TenCV).IsRequired().HasMaxLength(150);
             });
-            // Cấu hình bảng QuyenHan
+
             modelBuilder.Entity<QuyenHan>(entity =>
             {
                 entity.HasKey(e => e.MaQuyen);
@@ -82,7 +93,8 @@ namespace QLBoutique.ClothingDbContext
 
                 entity.Property(e => e.TenLoai)
                       .HasColumnName("TENLOAI")
-                      .HasMaxLength(30);
+                      .HasMaxLength(30)
+                      .IsRequired();
 
                 entity.Property(e => e.XuatSu)
                       .HasColumnName("XUATSU")
@@ -96,8 +108,9 @@ namespace QLBoutique.ClothingDbContext
                       .WithMany(e => e.Children)
                       .HasForeignKey(e => e.ParentId)
                       .HasConstraintName("FK_LoaiSanPham_Parent")
-                      .OnDelete(DeleteBehavior.Restrict); // để tránh xóa cascade nếu cần
+                      .OnDelete(DeleteBehavior.Restrict);
             });
+
             modelBuilder.Entity<NhaCungCap>(entity =>
             {
                 entity.ToTable("NHACUNGCAP");
@@ -111,7 +124,8 @@ namespace QLBoutique.ClothingDbContext
 
                 entity.Property(e => e.TenNCC)
                       .HasColumnName("TENNCC")
-                      .HasMaxLength(100);
+                      .HasMaxLength(100)
+                      .IsRequired();
 
                 entity.Property(e => e.DiaChi)
                       .HasColumnName("DIACHI")
@@ -130,6 +144,7 @@ namespace QLBoutique.ClothingDbContext
                       .HasColumnName("TRANGTHAI")
                       .HasDefaultValue(1);
             });
+
             modelBuilder.Entity<SanPham>(entity =>
             {
                 entity.ToTable("SANPHAM");
@@ -153,30 +168,31 @@ namespace QLBoutique.ClothingDbContext
 
                 entity.Property(e => e.MaLoai)
                       .HasColumnName("MALOAI")
-                      .HasMaxLength(20);
+                      .HasMaxLength(20)
+                      .IsRequired();
 
                 entity.Property(e => e.MaNCC)
                       .HasColumnName("MANCC")
-                      .HasMaxLength(20);
+                      .HasMaxLength(20)
+                      .IsRequired();
 
                 entity.Property(e => e.TrangThai)
                       .HasColumnName("TRANGTHAI")
                       .HasDefaultValue(1);
 
-                // Quan hệ với LoaiSanPham (không có collection navigation)
                 entity.HasOne(e => e.LoaiSanPham)
                       .WithMany()
                       .HasForeignKey(e => e.MaLoai)
                       .HasConstraintName("FK_SanPham_LoaiSanPham")
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // Quan hệ với NhaCungCap (không có collection navigation)
                 entity.HasOne(e => e.NhaCungCap)
                       .WithMany()
                       .HasForeignKey(e => e.MaNCC)
                       .HasConstraintName("FK_SanPham_NhaCungCap")
                       .OnDelete(DeleteBehavior.Restrict);
             });
+
             modelBuilder.Entity<ChiTietSanPham>(entity =>
             {
                 entity.ToTable("BIEN_THE_SANPHAM");
@@ -230,17 +246,15 @@ namespace QLBoutique.ClothingDbContext
                       .HasColumnName("TRANGTHAI")
                       .HasDefaultValue(1);
 
-                // Khóa ngoại đến SanPham
                 entity.HasOne(e => e.SanPham)
-                      .WithMany()   // Nếu SanPham có collection ChiTietSanPham thì thay thành .WithMany(x => x.ChiTietSanPham)
+                      .WithMany()
                       .HasForeignKey(e => e.MaSanPham)
                       .HasConstraintName("FK_BIEN_THE_SANPHAM_SANPHAM")
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // Ràng buộc unique trên tổ hợp MASP, SIZE, MAUSAC
                 entity.HasIndex(e => new { e.MaSanPham, e.Size, e.MauSac }).IsUnique();
             });
-            // Thêm vào cuối OnModelCreating
+
             modelBuilder.Entity<LoaiKhachHang>(entity =>
             {
                 entity.ToTable("LOAI_KHACHHANG");
@@ -265,13 +279,10 @@ namespace QLBoutique.ClothingDbContext
                       .HasMaxLength(200);
             });
 
-            // Cấu hình cho bảng KhachHang
             modelBuilder.Entity<KhachHang>(entity =>
             {
-                // Khóa chính
                 entity.HasKey(e => e.MaKH);
 
-                // Các property theo đúng cấu trúc class
                 entity.Property(e => e.MaKH)
                     .HasMaxLength(20)
                     .IsRequired();
@@ -309,12 +320,10 @@ namespace QLBoutique.ClothingDbContext
                     .HasMaxLength(20)
                     .HasDefaultValue("Hoạt động");
 
-                // Quan hệ khóa ngoại (nếu muốn cấu hình)
                 entity.HasOne(e => e.LoaiKhachHang)
-                    .WithMany()  // hoặc .WithMany(l => l.DsKhachHang) nếu có collection trong LoaiKhachHang
+                    .WithMany()
                     .HasForeignKey(e => e.MaLoaiKH)
                     .OnDelete(DeleteBehavior.Restrict);
-
             });
 
             modelBuilder.Entity<GioHang>(entity =>
@@ -384,7 +393,7 @@ namespace QLBoutique.ClothingDbContext
                       .HasConstraintName("FK_ChiTietGioHang_ChiTietSanPham")
                       .OnDelete(DeleteBehavior.Restrict);
             });
-            // Cấu hình bảng PHIEUNHAP
+
             modelBuilder.Entity<PhieuNhap>(entity =>
             {
                 entity.ToTable("PHIEUNHAP");
@@ -422,14 +431,12 @@ namespace QLBoutique.ClothingDbContext
                       .HasColumnName("TRANGTHAI")
                       .HasDefaultValue(1);
 
-                // Quan hệ với NhaCungCap
                 entity.HasOne(e => e.NhaCungCap)
                       .WithMany()
                       .HasForeignKey(e => e.MaNCC)
                       .HasConstraintName("FK_PhieuNhap_NhaCungCap")
                       .OnDelete(DeleteBehavior.Restrict);
 
-                // Quan hệ với NhanVien
                 entity.HasOne(e => e.NhanVien)
                       .WithMany()
                       .HasForeignKey(e => e.MaNV)
@@ -437,7 +444,6 @@ namespace QLBoutique.ClothingDbContext
                       .OnDelete(DeleteBehavior.Restrict);
             });
 
-            // Cấu hình bảng CHITIET_PHIEUNHAP
             modelBuilder.Entity<ChiTietPhieuNhap>(entity =>
             {
                 entity.ToTable("CHITIET_PHIEUNHAP");
@@ -463,167 +469,156 @@ namespace QLBoutique.ClothingDbContext
                       .HasColumnType("decimal(18,2)")
                       .IsRequired();
 
-                // Khóa ngoại đến PhieuNhap
                 entity.HasOne(e => e.PhieuNhap)
                       .WithMany(p => p.ChiTietPhieuNhaps)
                       .HasForeignKey(e => e.MaPhieuNhap)
                       .HasConstraintName("FK_ChiTietPhieuNhap_PhieuNhap")
                       .OnDelete(DeleteBehavior.Cascade);
 
-                // Khóa ngoại đến ChiTietSanPham (Biến thể sản phẩm)
                 entity.HasOne(e => e.BienTheSanPham)
                       .WithMany()
                       .HasForeignKey(e => e.MaBienThe)
                       .HasConstraintName("FK_ChiTietPhieuNhap_ChiTietSanPham")
                       .OnDelete(DeleteBehavior.Restrict);
             });
-                // Khuyến mãi
-                modelBuilder.Entity<KhuyenMai>(entity =>
-                {
-                    entity.HasKey(e => e.MaKM);
-                    entity.Property(e => e.TenKM).HasMaxLength(100);
-                    entity.Property(e => e.MoTa).HasMaxLength(200);
-                    entity.Property(e => e.MaLoaiKM).HasMaxLength(20);
-                    entity.Property(e => e.PhanTramGiam);
-                    //entity.Property(e => e.GiamToiDa);
-                    //entity.Property(e => e.GiamTien); 
-                    //entity.Property(e => e.DieuKien);
-                    entity.Property(e => e.NgayBatDau);
-                    entity.Property(e => e.NgayKetThuc);
-                    entity.Property(e => e.TrangThai);
-                    entity.Property(e => e.SoLuongApDung);
-                    entity.Property(e => e.SoLuongDaApDung);
-                    // Thiết lập mối quan hệ với KhachHang
-                    entity.HasOne(e => e.LoaiKhuyenMai)
-                        .WithMany()
-                        .HasForeignKey(e => e.MaLoaiKM)
-                        .HasConstraintName("FK_KhuyenMai_LoaiKhuyenMai");
 
-                });
+            modelBuilder.Entity<KhuyenMai>(entity =>
+            {
+                entity.HasKey(e => e.MaKM);
+                entity.Property(e => e.TenKM).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.MoTa).HasMaxLength(200);
+                entity.Property(e => e.MaLoaiKM).HasMaxLength(20).IsRequired();
+                entity.Property(e => e.PhanTramGiam).IsRequired();
+                entity.Property(e => e.NgayBatDau).IsRequired();
+                entity.Property(e => e.NgayKetThuc).IsRequired();
+                entity.Property(e => e.TrangThai).IsRequired();
+                entity.Property(e => e.SoLuongApDung).IsRequired();
+                entity.Property(e => e.SoLuongDaApDung).IsRequired();
+                entity.HasOne(e => e.LoaiKhuyenMai)
+                    .WithMany()
+                    .HasForeignKey(e => e.MaLoaiKM)
+                    .HasConstraintName("FK_KhuyenMai_LoaiKhuyenMai")
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
+            modelBuilder.Entity<LoaiKhuyenMai>(entity =>
+            {
+                entity.HasKey(e => e.MaLoaiKM);
+                entity.Property(e => e.TenLoaiKM).HasMaxLength(100).IsRequired();
+                entity.Property(e => e.GhiChu).HasMaxLength(200);
+            });
 
-                //Loại khuyến mãi
-                modelBuilder.Entity<LoaiKhuyenMai>(entity =>
-                {
-                    entity.HasKey(e => e.MaLoaiKM);
-                    entity.Property(e => e.TenLoaiKM).HasMaxLength(100);
-                    entity.Property(e => e.GhiChu).HasMaxLength(200);
-                });
+            modelBuilder.Entity<LichSuDiem>(entity =>
+            {
+                entity.HasKey(e => e.MaLSD);
+                entity.Property(e => e.MaKH)
+                    .HasColumnName("MAKH")
+                    .HasMaxLength(20)
+                    .IsRequired();
+                entity.Property(e => e.Ngay)
+                    .HasColumnName("NGAY")
+                    .IsRequired();
+                entity.Property(e => e.Diem)
+                    .HasColumnName("DIEM")
+                    .IsRequired();
+                entity.Property(e => e.Loai)
+                    .HasColumnName("LOAI")
+                    .HasMaxLength(20);
+                entity.Property(e => e.GhiChu)
+                    .HasColumnName("GHICHU")
+                    .HasMaxLength(200);
+                entity.HasOne(e => e.KhachHang)
+                    .WithMany()
+                    .HasForeignKey(e => e.MaKH)
+                    .HasConstraintName("FK_LichSuDiem_KhachHang")
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
-                // Lịch sử điểm
-                modelBuilder.Entity<LichSuDiem>(entity =>
-                {
-                    entity.HasKey(e => e.MaLSD); // Khóa chính
+            modelBuilder.Entity<PhuongThucThanhToan>(entity =>
+            {
+                entity.HasKey(e => e.MaTT);
+                entity.Property(e => e.TenTT)
+                    .HasColumnName("TenTT")
+                    .HasMaxLength(50)
+                    .IsRequired();
+            });
 
-                    entity.Property(e => e.MaKH)
-                        .HasColumnName("MAKH")
-                        .HasMaxLength(20);
+            modelBuilder.Entity<DiaChiKhachHang>(entity =>
+            {
+                entity.ToTable("DIACHI_KHACHHANG");
 
-                    entity.Property(e => e.Ngay)
-                        .HasColumnName("NGAY")
-                        .IsRequired();
+                entity.HasKey(e => e.MaDiaChi);
 
-                    entity.Property(e => e.Diem)
-                        .HasColumnName("DIEM")
-                        .IsRequired();
+                entity.Property(e => e.MaDiaChi)
+                      .HasMaxLength(20);
 
-                    entity.Property(e => e.Loai)
-                        .HasColumnName("LOAI")
-                        .HasMaxLength(20);
+                entity.Property(e => e.MaKH)
+                      .IsRequired()
+                      .HasMaxLength(20);
 
-                    entity.Property(e => e.GhiChu)
-                        .HasColumnName("GHICHU")
-                        .HasMaxLength(200);
+                entity.Property(e => e.HoTenNguoiNhan)
+                      .IsRequired()
+                      .HasMaxLength(100);
 
-                    // Thiết lập mối quan hệ với KhachHang
-                    entity.HasOne(e => e.KhachHang)
-                        .WithMany()
-                        .HasForeignKey(e => e.MaKH)
-                        .HasConstraintName("FK_LichSuDiem_KhachHang");
-                });
+                entity.Property(e => e.SDTNguoiNhan)
+                      .IsRequired()
+                      .HasMaxLength(15);
 
-                //Giỏ Hàng
-                modelBuilder.Entity<GioHang>(entity =>
-                {
-                    entity.HasKey(e => e.MaGioHang); // Khóa chính
+                entity.Property(e => e.DiaChiCuThe)
+                      .IsRequired()
+                      .HasMaxLength(255);
 
-                    entity.Property(e => e.MaKH)
-                        .HasColumnName("MAKH")
-                        .HasMaxLength(20);
+                entity.Property(e => e.TinhTP)
+                      .IsRequired()
+                      .HasMaxLength(100);
 
-                    entity.Property(e => e.NgayTao)
-                        .HasColumnName("NGAYTAO")
-                        .IsRequired();
+                entity.Property(e => e.HuyenQuan)
+                      .IsRequired()
+                      .HasMaxLength(100);
 
-                    entity.Property(e => e.NgayCapNhat)
-                        .HasColumnName("NGAYCAPNHAT")
-                        .IsRequired();
+                entity.Property(e => e.XaPhuong)
+                      .IsRequired()
+                      .HasMaxLength(100);
 
-                    entity.Property(e => e.TrangThai)
-                        .HasColumnName("TRANGTHAI")
-                        .IsRequired();
+                entity.Property(e => e.GhiChu)
+                      .HasMaxLength(200);
 
-                    // Thiết lập mối quan hệ với KhachHang
-                    entity.HasOne(e => e.KhachHang)
-                        .WithMany()
-                        .HasForeignKey(e => e.MaKH)
-                        .HasConstraintName("FK_GioHang_KhachHang");
-                });
+                entity.Property(e => e.MacDinh)
+                      .HasDefaultValue(false);
 
-                //Phương thức thanh toán
-                modelBuilder.Entity<PhuongThucThanhToan>(entity =>
-                {
-                    entity.HasKey(e => e.MaTT); // Khóa chính
+                entity.HasOne(e => e.KhachHang)
+                      .WithMany(kh => kh.DiaChiKhachHangs)
+                      .HasForeignKey(e => e.MaKH)
+                      .OnDelete(DeleteBehavior.Cascade)
+                      .HasConstraintName("FK_DiaChiKhachHang_KhachHang");
+            });
+            modelBuilder.Entity<DonViVanChuyen>(entity =>
+            {
+                entity.ToTable("DONVIVANCHUYEN");
 
-                    entity.Property(e => e.TenTT)
-                        .HasColumnName("TenTT")
-                        .HasMaxLength(50);
-                });
+                entity.HasKey(e => e.MaDVVC);
 
-                //Hóa đơn
-                modelBuilder.Entity<HoaDon>(entity =>
-                {
-                    entity.HasKey(e => e.MaHoaDon); // Khóa chính
+                entity.Property(e => e.MaDVVC)
+                      .HasColumnName("MADVVC")
+                      .HasMaxLength(20)
+                      .IsRequired();
 
-                    entity.Property(e => e.MaKH)
-                        .HasColumnName("MAKH")
-                        .HasMaxLength(20);
-                    entity.Property(e => e.MaNV)
-                        .HasColumnName("MANV")
-                        .HasMaxLength(20);
-                    entity.Property(e => e.NgayLap)
-                        .HasColumnName("NGAYLAP")
-                        .IsRequired();
-                    entity.Property(e => e.TongTien)
-                          .HasColumnType("decimal(18,2)");
-                    entity.Property(e => e.GiamGia)
-                          .HasColumnType("decimal(18,2)");
-                    entity.Property(e => e.ThanhTien)
-                          .HasColumnType("decimal(18,2)");
-                    entity.Property(e => e.MaKM)
-                        .HasColumnName("MAKM")
-                        .HasMaxLength(20);
-                    entity.Property(e => e.MaTT)
-                        .HasColumnName("MATT")
-                        .HasMaxLength(20);
-                    entity.Property(e => e.TrangThai)
-                        .HasColumnName("TRANGTHAI")
-                        .IsRequired();
-                    entity.Property(e => e.GhiChu)
-                        .HasColumnName("GHICHU")
-                        .HasMaxLength(200);
+                entity.Property(e => e.TenDVVC)
+                      .HasColumnName("TENDVVC")
+                      .HasMaxLength(100)
+                      .IsRequired();
 
-                    // Thiết lập mối quan hệ với KhachHang
-                    entity.HasOne(e => e.KhachHang)
-                        .WithMany()
-                        .HasForeignKey(e => e.MaKH)
-                        .HasConstraintName("FK_HoaDon_KhachHang");
-                    // Thiết lập mối quan hệ với NhanVien
-                    entity.HasOne(e => e.Nhanvien)
-                        .WithMany()
-                        .HasForeignKey(e => e.MaNV)
-                        .HasConstraintName("FK_HoaDon_NhanVien");
+                entity.Property(e => e.PhiVanChuyen)
+                      .HasColumnName("PHIVANCHUYEN")
+                      .HasColumnType("decimal(18,2)")
+                      .IsRequired();
+                entity.Property(e => e.ThoiGianGiao)
+                      .HasColumnName("THOIGIAN_GIAO")
+                      .HasMaxLength(50)
+                      .IsRequired();
+            });
 
+<<<<<<< HEAD
                     // Thiết lập mối quan hệ với KhuyenMai
                     entity.HasOne(e => e.KhuyenMai)
                         .WithMany()
@@ -635,11 +630,96 @@ namespace QLBoutique.ClothingDbContext
                         .HasForeignKey(e => e.MaTT)
                         .HasConstraintName("FK_HoaDon_PhuongThucThanhToan");
                 });
+=======
+            modelBuilder.Entity<HoaDon>(entity =>
+            {
+                entity.ToTable("HOADON");
+
+                entity.HasKey(e => e.MaHD);
+
+                entity.Property(e => e.MaHD)
+                      .HasMaxLength(20);
+
+                entity.Property(e => e.MaKH)
+                      .HasMaxLength(20);
+                entity.Property(e => e.MaDVVC)
+                      .IsRequired()
+                      .HasMaxLength(20);
+
+                entity.Property(e => e.MaNV)
+                      .IsRequired()
+                      .HasMaxLength(20);
+
+                entity.Property(e => e.NgayLap)
+                      .HasDefaultValueSql("GETDATE()");
+
+                entity.Property(e => e.TongTien)
+                      .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.GiamGia)
+                      .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.ThanhTien)
+                      .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.MaKM)
+                      .HasMaxLength(20);
+
+                entity.Property(e => e.MaTT)
+                      .IsRequired()
+                      .HasMaxLength(20);
+
+                entity.Property(e => e.TrangThai)
+                      .HasDefaultValue(1);
+
+                entity.Property(e => e.GhiChu)
+                      .HasMaxLength(200);
+
+                entity.Property(e => e.MaDiaChi)
+                      .HasMaxLength(20);
+
+                entity.HasOne(e => e.KhachHang)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaKH)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_HoaDon_KhachHang");
+
+                entity.HasOne(e => e.NhanVien)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaNV)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_HoaDon_NhanVien");
+
+                entity.HasOne(e => e.KhuyenMai)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaKM)
+                      .OnDelete(DeleteBehavior.SetNull)
+                      .HasConstraintName("FK_HoaDon_KhuyenMai");
+
+                entity.HasOne(e => e.PhuongThucThanhToan)
+                      .WithMany(p => p.HoaDons)
+                      .HasForeignKey(e => e.MaTT)
+                      .OnDelete(DeleteBehavior.Restrict);
+                      
+
+                entity.HasOne(e => e.DiaChiKhachHang)
+                      .WithMany(d => d.HoaDons)
+                      .HasForeignKey(e => e.MaDiaChi)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_HoaDon_DiaChiKhachHang");
+                entity.HasOne(e => e.DonViVanChuyen)
+                      .WithMany(d => d.HoaDons)
+                      .HasForeignKey(e => e.MaDVVC)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_HoaDon_DonViVanChuyen");
+            });
+>>>>>>> 55807bd3bafc46dd83db3d3e7badd936e740ced9
 
             modelBuilder.Entity<ChiTietHoaDon>(entity =>
             {
                 entity.ToTable("CHITIET_HOADON");
 
+<<<<<<< HEAD
                 entity.HasKey(e => new { e.MaChiTietHD});
 
                 entity.Property(e => e.MaHD)
@@ -677,6 +757,42 @@ namespace QLBoutique.ClothingDbContext
                       .HasForeignKey(e => e.MaBienThe)
                       .HasConstraintName("FK_ChiTietHoaDon_ChiTietSanPham")
                       .OnDelete(DeleteBehavior.Restrict);
+=======
+                entity.HasKey(e => e.MaChiTiet_HD);
+
+                entity.Property(e => e.MaChiTiet_HD)
+                      .HasMaxLength(20);
+
+                entity.Property(e => e.MaHD)
+                      .HasMaxLength(20);
+
+                entity.Property(e => e.MaBienThe)
+                      .HasMaxLength(20);
+
+                entity.Property(e => e.SoLuong)
+                      .HasDefaultValue(1);
+
+                entity.Property(e => e.GiaBan)
+                      .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.GiamGia)
+                      .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.ThanhTien)
+                      .HasColumnType("decimal(18,2)");
+
+                entity.HasOne(e => e.HoaDon)
+                      .WithMany(hd => hd.ChiTietHoaDons)
+                      .HasForeignKey(e => e.MaHD)
+                      .OnDelete(DeleteBehavior.Cascade)
+                      .HasConstraintName("FK_ChiTietHoaDon_HoaDon");
+
+                entity.HasOne(e => e.BienTheSanPham)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaBienThe)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_ChiTietHoaDon_ChiTietSanPham");
+>>>>>>> 55807bd3bafc46dd83db3d3e7badd936e740ced9
             });
         }
     }

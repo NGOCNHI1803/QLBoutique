@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace QLBoutique.Model
 {
@@ -8,21 +10,23 @@ namespace QLBoutique.Model
     public class HoaDon
     {
         [Key]
-        [Column("MAHD")]
         [StringLength(20)]
+<<<<<<< HEAD
         public string? MaHoaDon { get; set; }
+=======
+        public string MaHD { get; set; }
+>>>>>>> 55807bd3bafc46dd83db3d3e7badd936e740ced9
 
-        [Column("MAKH")]
         [StringLength(20)]
-        public string? MaKH { get; set; }
+        public string MaKH { get; set; }
 
-        [Column("MANV")]
+        [Required]
         [StringLength(20)]
         public string MaNV { get; set; }
 
-        [Column("NGAYLAP")]
-        public DateTime NgayLap { get; set; }
+        public DateTime NgayLap { get; set; } = DateTime.Now;
 
+<<<<<<< HEAD
         [Column("TONGTIEN")]
         public decimal TongTien { get; set; }
 
@@ -32,31 +36,54 @@ namespace QLBoutique.Model
         public decimal ThanhTien { get; set; }
 
         [Column("MAKM")]
+=======
+        public decimal TongTien { get; set; }
+
+        public decimal GiamGia { get; set; }
+
+        public decimal ThanhTien { get; set; }
+
+>>>>>>> 55807bd3bafc46dd83db3d3e7badd936e740ced9
         [StringLength(20)]
         public string? MaKM { get; set; }
 
-        [Column("MATT")]
+        public int TrangThai { get; set; } = 1;
+
+        [StringLength(200)]
+        public string GhiChu { get; set; }
+
+        [StringLength(20)]
+        public string MaDiaChi { get; set; }
+
+        [Required]
         [StringLength(20)]
         public string MaTT { get; set; }
 
-        [Column("TRANGTHAI")]
-        public int? TrangThai { get; set; }
-
-        [Column("GHICHU")]
-        [StringLength(200)]
-        public string? GhiChu { get; set; }
-
+        [Required]
+        [StringLength(20)]
+        public string MaDVVC { get; set; }
 
         [ForeignKey("MaKH")]
-        public virtual KhachHang? KhachHang { get; set; }
+        public KhachHang KhachHang { get; set; }
 
         [ForeignKey("MaNV")]
-        public virtual NhanVien? Nhanvien { get; set; }
+        public NhanVien NhanVien { get; set; }
 
         [ForeignKey("MaKM")]
-        public virtual KhuyenMai? KhuyenMai { get; set; }
+        [JsonIgnore]
+        public KhuyenMai? KhuyenMai { get; set; }
 
         [ForeignKey("MaTT")]
-        public virtual PhuongThucThanhToan? PhuongThucThanhToan { get; set; }
+        [InverseProperty("HoaDons")]
+        [JsonIgnore]
+        public PhuongThucThanhToan? PhuongThucThanhToan { get; set; }
+
+        [ForeignKey("MaDiaChi")]
+        public DiaChiKhachHang DiaChiKhachHang { get; set; }
+
+        [ForeignKey("MaDVVC")]
+        public DonViVanChuyen DonViVanChuyen { get; set; }
+
+        public ICollection<ChiTietHoaDon> ChiTietHoaDons { get; set; }
     }
 }

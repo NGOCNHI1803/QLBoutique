@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -10,10 +10,13 @@ namespace QLBoutique.Model
         [Key]
         [Column("MATT")]
         [StringLength(20)]
-        public string MaTT { get; set; }
+        public string? MaTT { get; set; }
 
         [Column("TENTT")]
         [StringLength(50)]
         public string TenTT { get; set; }
+
+        [InverseProperty("PhuongThucThanhToan")]
+        public ICollection<HoaDon> HoaDons { get; set; }
     }
 }
