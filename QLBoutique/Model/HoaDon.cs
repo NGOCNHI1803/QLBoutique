@@ -10,7 +10,7 @@ namespace QLBoutique.Model
         [Key]
         [Column("MAHD")]
         [StringLength(20)]
-        public string MaHoaDon { get; set; }
+        public string? MaHoaDon { get; set; }
 
         [Column("MAKH")]
         [StringLength(20)]
@@ -24,13 +24,13 @@ namespace QLBoutique.Model
         public DateTime NgayLap { get; set; }
 
         [Column("TONGTIEN")]
-        public decimal TongTien{ get; set; }
+        public decimal TongTien { get; set; }
 
         [Column("GiamGia")]
-        public decimal GiamGia { get; set; }
+        public decimal? GiamGia { get; set; }
         [Column("THANHTIEN")]
         public decimal ThanhTien { get; set; }
-       
+
         [Column("MAKM")]
         [StringLength(20)]
         public string? MaKM { get; set; }

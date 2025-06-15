@@ -266,6 +266,53 @@ namespace QLBoutique.Controllers
             return bienTheList;
         }
 
+        [HttpGet("TimMaBienThe")]
+        public IActionResult TimMaBienThe(string tenSP, string size, string mauSac)
+        {
+            var sanPham = _context.SanPham.FirstOrDefault(sp => sp.TenSanPham == tenSP);
+            if (sanPham == null)
+            {
+                return NotFound(new { message = "Không tìm thấy sản phẩm theo tên." });
+            }
+
+            string maSP = sanPham.MaSanPham;
+
+            var bienThe = _context.ChiTietSanPham.FirstOrDefault(bt =>
+                bt.MaSanPham == maSP &&
+                bt.Size == size &&
+                bt.MauSac == mauSac
+            );
+
+            if (bienThe == null)
+            {
+                return NotFound(new { message = "Không tìm thấy biến thể." });
+            }
+
+            return Ok(new { MaBienThe = bienThe.MaBienThe });
+        }
+
+        // GET: api/ChiTietSanPham/tonkho?maSP=ABC123&size=M&mauSac=trắng
+        [HttpGet("tonkho")]
+        public async Task<IActionResult> GetTonKhoTheoMaSPVaSize([FromQuery] string maSP, [FromQuery] string size, [FromQuery] string mauSac)
+        {
+            if (string.IsNullOrEmpty(maSP) || string.IsNullOrEmpty(size))
+                return BadRequest("Mã sản phẩm và size không được để trống.");
+
+            var chiTiet = await _context.ChiTietSanPham
+                .FirstOrDefaultAsync(x => x.MaSanPham == maSP && x.Size == size && x.MauSac == mauSac );
+
+            if (chiTiet == null)
+                return NotFound("Không tìm thấy thông tin tồn kho cho sản phẩm, size và màu đã chọn.");
+
+            return Ok(new
+            {
+                MaSP = chiTiet.MaSanPham,
+                Size = chiTiet.Size,
+                MauSac = chiTiet.MauSac,
+                TonKho = chiTiet.TonKho
+            });
+        }
+
 
     }
 }

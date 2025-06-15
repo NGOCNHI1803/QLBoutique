@@ -26,22 +26,25 @@ namespace QLBoutique.Controllers
             var doanhThu = await _context.HoaDon
                 .Where(h => h.NgayLap.Date == ngay.Date)
                 .SumAsync(h => h.ThanhTien);
-
             return Ok(doanhThu);
         }
 
+
         // api: lấy doanh thu hóa đơn theo từ ngày đến ngày
         [HttpGet("doanhthu/TuNgay-Ngay")]
-        public async Task<IActionResult> GetDoanhThuTuNgayDenNgay(DateTime ngayStart, DateTime ngayEnd)
+        public async Task<IActionResult> GetDoanhThuTheoNgay([FromQuery] DateTime ngayStart, [FromQuery] DateTime ngayEnd)
         {
-            if (ngayStart > ngayEnd)
-                return BadRequest("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc.");
-
-            var doanhThu = await _context.HoaDon
+            var hoaDons = _context.HoaDon
                 .Where(h => h.NgayLap.Date >= ngayStart.Date && h.NgayLap.Date <= ngayEnd.Date)
-                .SumAsync(h => h.ThanhTien);
+                .ToList();
 
-            return Ok(new { TuNgay = ngayStart, DenNgay = ngayEnd, TongDoanhThu = doanhThu });
+            var tongTien = hoaDons.Sum(h => h.ThanhTien);
+
+            return Ok(new ThongKe
+            {
+                Data = hoaDons,
+                TongTien = tongTien
+            });
         }
 
         //api: lấy doanh thu hóa đơn theo ngày

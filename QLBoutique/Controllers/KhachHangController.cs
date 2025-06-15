@@ -419,17 +419,22 @@ namespace QLBoutique.Controllers
             if (string.IsNullOrWhiteSpace(tenKH) || string.IsNullOrWhiteSpace(sdt))
                 return BadRequest("Tên và số điện thoại không được để trống.");
 
+            tenKH = tenKH.Trim().ToLower();
+            sdt = sdt.Trim();
+
             var khachHang = await _context.KhachHang
                 .AsNoTracking()
-                .FirstOrDefaultAsync(k => k.TenKH == tenKH && k.SoDienThoai == sdt);
+                .FirstOrDefaultAsync(k =>
+                    k.TenKH.ToLower().Trim() == tenKH &&
+                    k.SoDienThoai.Trim() == sdt);
 
             if (khachHang == null)
                 return NotFound("Không tìm thấy khách hàng.");
 
             return Ok(new { MaKH = khachHang.MaKH });
-        
         }
-        
+
+
         // DELETE: /KhachHang/Delete/{maKH}
         [HttpDelete("Delete/{maKH}")]
         public async Task<IActionResult> DeleteCustomer(string maKH)
@@ -446,7 +451,6 @@ namespace QLBoutique.Controllers
 
             return Ok(new { message = "Xóa khách hàng thành công." });
         }
-
 
     }
 }

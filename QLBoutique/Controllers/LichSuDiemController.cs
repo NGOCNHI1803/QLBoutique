@@ -18,13 +18,16 @@ namespace QLBoutique.Controllers
             _context = context;
         }
 
+        // PUT: api/LichSuDiem/{maKH}
         [HttpPut("{maKH}")]
-        public async Task<IActionResult> UpdateDiemByMaKH(string maKH, [FromBody] LichSuDiem updateModel)
+        public async Task<IActionResult> UpdateDiemByMaKH(string maKH, [FromBody] UpdateDiemRequest request)
         {
             if (string.IsNullOrEmpty(maKH))
                 return BadRequest("Mã khách hàng không hợp lệ.");
 
-            // Tìm bản ghi mới nhất của khách hàng đó
+            if (request == null || request.Diem < 0)
+                return BadRequest("Điểm sử dụng không hợp lệ.");
+
             var lichSu = await _context.LichSuDiems
                 .Where(x => x.MaKH == maKH)
                 .OrderByDescending(x => x.Ngay)
@@ -33,13 +36,29 @@ namespace QLBoutique.Controllers
             if (lichSu == null)
                 return NotFound("Không tìm thấy lịch sử điểm cho khách hàng.");
 
-            // Cập nhật điểm
-            lichSu.Diem = updateModel.Diem;
+            if (lichSu.Diem < request.Diem)
+                return BadRequest("Số điểm sử dụng vượt quá số điểm hiện có.");
 
-            await _context.SaveChangesAsync();
+            // ✅ Trừ điểm
+            lichSu.Diem -= request.Diem;
+            lichSu.Ngay = DateTime.Now;
 
-            return Ok(lichSu);
+            try
+            {
+                await _context.SaveChangesAsync();
+                return Ok(new
+                {
+                    MaKH = maKH,
+                    DiemConLai = lichSu.Diem
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Lỗi khi lưu dữ liệu: " + ex.Message);
+            }
         }
+
+
 
 
 

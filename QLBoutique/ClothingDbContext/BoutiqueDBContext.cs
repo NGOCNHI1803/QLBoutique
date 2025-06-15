@@ -22,7 +22,7 @@ namespace QLBoutique.ClothingDbContext
         public DbSet<NhanVien> NhanVien { get; set; }
         public DbSet<PhieuNhap> PhieuNhaps { get; set; }
         public DbSet<ChiTietPhieuNhap> ChiTietPhieuNhaps { get; set; }
-
+        public DbSet<ChiTietHoaDon> ChiTietHoaDon { get; set; }
         public DbSet<KhuyenMai> KhuyenMai { get; set; }
         public DbSet<LoaiKhuyenMai> LoaiKhuyenMai { get; set; }
         public DbSet<LichSuDiem> LichSuDiems { get; set; }
@@ -47,17 +47,11 @@ namespace QLBoutique.ClothingDbContext
             modelBuilder.Entity<NhanVien>(entity =>
             {
                 entity.HasKey(e => e.MaNV);
-<<<<<<< HEAD
-
-=======
-            
->>>>>>> 3b7916916ed33d47459661c5d28fae2dcb81dfdd
                 entity.Property(e => e.HoTen).HasMaxLength(100);
                 entity.Property(e => e.DiaChi).HasMaxLength(200);
                 entity.Property(e => e.SDT).HasMaxLength(10).IsFixedLength();
                 entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Password).IsRequired().HasMaxLength(255);
-<<<<<<< HEAD
                 entity.Property(e => e.MaQuyen).HasColumnName("MaQuyen");
                 entity.Property(e => e.MaCV).HasColumnName("MaCV");
 
@@ -70,21 +64,7 @@ namespace QLBoutique.ClothingDbContext
                 entity.HasOne(e => e.ChucVu)
                       .WithMany()
                       .HasForeignKey(e => e.MaCV)
-                      .HasPrincipalKey(cv => cv.MaCV)     // khóa chính bên ChucVu
-=======
-            
-                // Thiết lập quan hệ với bảng QuyenHan
-                entity.HasOne(e => e.QuyenHan)
-                      .WithMany()
-                      .HasForeignKey(e => e.MaQuyen)
-                      .HasConstraintName("FK_NhanVien_QuyenHan");
-            
-                // Thiết lập quan hệ với bảng ChucVu
-                entity.HasOne(e => e.ChucVu)
-                      .WithMany()
-                      .HasForeignKey(e => e.MaCV)
->>>>>>> 3b7916916ed33d47459661c5d28fae2dcb81dfdd
-                      .HasConstraintName("FK_NhanVien_ChucVu");
+                      .HasPrincipalKey(cv => cv.MaCV);     
             });
 
 
@@ -655,7 +635,49 @@ namespace QLBoutique.ClothingDbContext
                         .HasForeignKey(e => e.MaTT)
                         .HasConstraintName("FK_HoaDon_PhuongThucThanhToan");
                 });
-               
+
+            modelBuilder.Entity<ChiTietHoaDon>(entity =>
+            {
+                entity.ToTable("CHITIET_HOADON");
+
+                entity.HasKey(e => new { e.MaChiTietHD});
+
+                entity.Property(e => e.MaHD)
+                      .HasColumnName("MAHD")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.MaBienThe)
+                      .HasColumnName("MABIEN_THE")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.SoLuong)
+                      .HasColumnName("SOLUONG")
+                      .HasDefaultValue(1);
+
+                entity.Property(e => e.GiaBan)
+                          .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.GiaGiam)
+                          .HasColumnType("decimal(18,2)");
+
+                entity.Property(e => e.ThanhTien)
+                          .HasColumnType("decimal(18,2)");
+                // Khóa ngoại đến HoaDon
+                entity.HasOne(e => e.HoaDon)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaHD)
+                      .HasConstraintName("FK_ChiTietHoaDon_HoaDon")
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                // Khóa ngoại đến BIEN_THE_SANPHAM
+                entity.HasOne(e => e.ChiTietSanPham)
+                      .WithMany()
+                      .HasForeignKey(e => e.MaBienThe)
+                      .HasConstraintName("FK_ChiTietHoaDon_ChiTietSanPham")
+                      .OnDelete(DeleteBehavior.Restrict);
+            });
         }
     }
 }
