@@ -22,22 +22,24 @@ namespace QLBoutique.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<KhuyenMai>>> GetAll()
         {
-            var danhSach = await _context.KhuyenMai
-    .Select(k => new {
-        k.MaKM,
-        k.TenKM,
-        k.MoTa,
-        k.MaLoaiKM,
-        PhanTramGiam = k.PhanTramGiam ?? 0,
-        TrangThai = k.TrangThai ?? 0,
-        SoLuongApDung = k.SoLuongApDung ?? 0,
-        SoLuongDaApDung = k.SoLuongDaApDung ?? 0,
-        k.NgayBatDau,
-        k.NgayKetThuc
-    })
-    .ToListAsync();
+            var list = await _context.KhuyenMai.ToListAsync();
+            return Ok(list);
+            //var danhSach = await _context.KhuyenMai
+            //.Select(k => new {
+            //    k.MaKM,
+            //    k.TenKM,
+            //    k.MoTa,
+            //    k.MaLoaiKM,
+            //    PhanTramGiam = k.PhanTramGiam ?? 0,
+            //    TrangThai = k.TrangThai ?? 0,
+            //    SoLuongApDung = k.SoLuongApDung ?? 0,
+            //    SoLuongDaApDung = k.SoLuongDaApDung ?? 0,
+            //    k.NgayBatDau,
+            //    k.NgayKetThuc
+            //})
+            //.ToListAsync();
 
-            return Ok(danhSach);
+            //return Ok(danhSach);
         }
 
         // GET: api/KhuyenMai/{maKM}

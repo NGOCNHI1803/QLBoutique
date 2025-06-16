@@ -25,7 +25,7 @@ namespace QLBoutique.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<PhieuNhap>>> GetPhieuNhaps()
         {
-            return await _context.PhieuNhaps
+            return await _context.PhieuNhap
                 .Include(p => p.NhaCungCap)
                 .Include(p => p.NhanVien)
                 .Include(p => p.ChiTietPhieuNhaps)
@@ -36,7 +36,7 @@ namespace QLBoutique.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<PhieuNhap>> GetPhieuNhap(string id)
         {
-            var phieuNhap = await _context.PhieuNhaps
+            var phieuNhap = await _context.PhieuNhap
                 .Include(p => p.ChiTietPhieuNhaps)
                 .ThenInclude(ct => ct.BienTheSanPham)
                 .FirstOrDefaultAsync(p => p.MaPhieuNhap == id);
@@ -60,7 +60,7 @@ namespace QLBoutique.Controllers
             }
 
             phieuNhap.NgayNhap = DateTime.Now;
-            _context.PhieuNhaps.Add(phieuNhap);
+            _context.PhieuNhap.Add(phieuNhap);
 
             try
             {
@@ -84,7 +84,7 @@ namespace QLBoutique.Controllers
                 return BadRequest("Mã phiếu nhập không khớp.");
             }
 
-            var existingPhieuNhap = await _context.PhieuNhaps
+            var existingPhieuNhap = await _context.PhieuNhap
                 .Include(p => p.ChiTietPhieuNhaps)
                 .FirstOrDefaultAsync(p => p.MaPhieuNhap == id);
 
@@ -100,7 +100,7 @@ namespace QLBoutique.Controllers
             existingPhieuNhap.TrangThai = phieuNhap.TrangThai;
 
             // Xóa chi tiết cũ
-            _context.ChiTietPhieuNhaps.RemoveRange(existingPhieuNhap.ChiTietPhieuNhaps);
+            _context.ChiTietPhieuNhap.RemoveRange(existingPhieuNhap.ChiTietPhieuNhaps);
 
             // Thêm chi tiết mới
             if (phieuNhap.ChiTietPhieuNhaps != null)
@@ -108,7 +108,7 @@ namespace QLBoutique.Controllers
                 foreach (var ct in phieuNhap.ChiTietPhieuNhaps)
                 {
                     ct.MaPhieuNhap = id;
-                    _context.ChiTietPhieuNhaps.Add(ct);
+                    _context.ChiTietPhieuNhap.Add(ct);
                 }
 
                 existingPhieuNhap.TongTien = phieuNhap.ChiTietPhieuNhaps.Sum(ct => ct.SoLuong * ct.Gia_Von);
@@ -124,7 +124,7 @@ namespace QLBoutique.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.PhieuNhaps.Any(e => e.MaPhieuNhap == id))
+                if (!_context.PhieuNhap.Any(e => e.MaPhieuNhap == id))
                 {
                     return NotFound();
                 }
@@ -138,7 +138,7 @@ namespace QLBoutique.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePhieuNhap(string id)
         {
-            var phieuNhap = await _context.PhieuNhaps
+            var phieuNhap = await _context.PhieuNhap
                 .Include(p => p.ChiTietPhieuNhaps)
                 .FirstOrDefaultAsync(p => p.MaPhieuNhap == id);
 
@@ -150,10 +150,10 @@ namespace QLBoutique.Controllers
             // Xóa chi tiết trước để tránh FK violation
             if (phieuNhap.ChiTietPhieuNhaps != null)
             {
-                _context.ChiTietPhieuNhaps.RemoveRange(phieuNhap.ChiTietPhieuNhaps);
+                _context.ChiTietPhieuNhap.RemoveRange(phieuNhap.ChiTietPhieuNhaps);
             }
 
-            _context.PhieuNhaps.Remove(phieuNhap);
+            _context.PhieuNhap.Remove(phieuNhap);
             await _context.SaveChangesAsync();
 
             return NoContent();

@@ -28,6 +28,8 @@ namespace QLBoutique.Controllers
         {
             return await _context.HoaDon.ToListAsync();
         }
+
+        /* Tạo hóa đơn cho winform*/
         [HttpPost]
         public async Task<IActionResult> AddHoaDon([FromBody] HoaDonRequest request)
         {
@@ -66,8 +68,6 @@ namespace QLBoutique.Controllers
 
                 _context.HoaDon.Add(hoaDon);
                 await _context.SaveChangesAsync();
-
-<<<<<<< HEAD
                 // 🔁 Sinh mã chi tiết hóa đơn tăng dần
                 var lastCT = await _context.ChiTietHoaDon.OrderByDescending(c => c.MaChiTietHD).FirstOrDefaultAsync();
                 int ctSo = 1;
@@ -121,9 +121,6 @@ namespace QLBoutique.Controllers
                 await transaction.CommitAsync();
 
                 return Ok(new { message = "Tạo hóa đơn và chi tiết thành công!", maHD = hoaDon.MaHoaDon });
-=======
-                return CreatedAtAction(nameof(GetAll), new { id = hoaDon.MaHD }, hoaDon);
->>>>>>> 55807bd3bafc46dd83db3d3e7badd936e740ced9
             }
             catch (Exception ex)
             {
@@ -291,7 +288,7 @@ namespace QLBoutique.Controllers
 
                 var hoaDon = new HoaDon
                 {
-                    MaHD = "HD" + Guid.NewGuid().ToString("N").Substring(0, 10),
+                    MaHoaDon = "HD" + Guid.NewGuid().ToString("N").Substring(0, 10),
                     MaKH = request.MaKH,
                     MaNV = request.MaNV,
                     NgayLap = DateTime.Now,
@@ -325,12 +322,12 @@ namespace QLBoutique.Controllers
 
                     var chiTiet = new ChiTietHoaDon
                     {
-                        MaChiTiet_HD = "CTHD" + Guid.NewGuid().ToString("N").Substring(0, 10),
-                        MaHD = hoaDon.MaHD,
+                        MaChiTietHD = "CTHD" + Guid.NewGuid().ToString("N").Substring(0, 10),
+                        MaHD = hoaDon.MaHoaDon,
                         MaBienThe = sp.MaBienThe,
                         SoLuong = sp.SoLuong,
                         GiaBan = sp.GiaBan,
-                        GiamGia = sp.GiamGia,
+                        GiaGiam = sp.GiamGia,
                         ThanhTien = (sp.GiaBan * sp.SoLuong) - sp.GiamGia
                     };
 
@@ -352,7 +349,7 @@ namespace QLBoutique.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Ok(new { message = "Đặt hàng thành công", MaHD = hoaDon.MaHD });
+                return Ok(new { message = "Đặt hàng thành công", MaHD = hoaDon.MaHoaDon});
             }
             catch (Exception ex)
 {
@@ -366,7 +363,7 @@ namespace QLBoutique.Controllers
         public async Task<ActionResult<IEnumerable<ChiTietHoaDon>>> GetAllChiTietHoaDon()
         {
             var list = await _context.ChiTietHoaDon
-                .Include(ct => ct.BienTheSanPham)
+                .Include(ct => ct.ChiTietSanPham)
                 .Include(ct => ct.HoaDon)
                 .ToListAsync();
 
@@ -379,7 +376,7 @@ namespace QLBoutique.Controllers
         {
             var list = await _context.ChiTietHoaDon
                 .Where(ct => ct.MaHD == maHD)
-                .Include(ct => ct.BienTheSanPham)
+                .Include(ct => ct.ChiTietSanPham)
                 .Include(ct => ct.HoaDon)
                 .ToListAsync();
 

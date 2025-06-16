@@ -10,12 +10,9 @@ namespace QLBoutique.Model
     public class HoaDon
     {
         [Key]
+        [Column("MAHD")]
         [StringLength(20)]
-<<<<<<< HEAD
         public string? MaHoaDon { get; set; }
-=======
-        public string MaHD { get; set; }
->>>>>>> 55807bd3bafc46dd83db3d3e7badd936e740ced9
 
         [StringLength(20)]
         public string MaKH { get; set; }
@@ -26,7 +23,6 @@ namespace QLBoutique.Model
 
         public DateTime NgayLap { get; set; } = DateTime.Now;
 
-<<<<<<< HEAD
         [Column("TONGTIEN")]
         public decimal TongTien { get; set; }
 
@@ -36,14 +32,7 @@ namespace QLBoutique.Model
         public decimal ThanhTien { get; set; }
 
         [Column("MAKM")]
-=======
-        public decimal TongTien { get; set; }
 
-        public decimal GiamGia { get; set; }
-
-        public decimal ThanhTien { get; set; }
-
->>>>>>> 55807bd3bafc46dd83db3d3e7badd936e740ced9
         [StringLength(20)]
         public string? MaKM { get; set; }
 
@@ -55,11 +44,10 @@ namespace QLBoutique.Model
         [StringLength(20)]
         public string MaDiaChi { get; set; }
 
-        [Required]
         [StringLength(20)]
         public string MaTT { get; set; }
 
-        [Required]
+       
         [StringLength(20)]
         public string MaDVVC { get; set; }
 

@@ -23,7 +23,7 @@ namespace QLBoutique.Controllers
         [HttpGet("{maphieunhap}")]
         public async Task<ActionResult<IEnumerable<ChiTietPhieuNhap>>> GetChiTietPhieuNhaps(string maphieunhap)
         {
-            var chiTietList = await _context.ChiTietPhieuNhaps
+            var chiTietList = await _context.ChiTietPhieuNhap
                 .Where(ct => ct.MaPhieuNhap == maphieunhap)
                 .Include(ct => ct.BienTheSanPham)
                 .ToListAsync();
@@ -38,7 +38,7 @@ namespace QLBoutique.Controllers
         [HttpGet("{maphieunhap}/{mabienthe}")]
         public async Task<ActionResult<ChiTietPhieuNhap>> GetChiTietPhieuNhap(string maphieunhap, string mabienthe)
         {
-            var chiTiet = await _context.ChiTietPhieuNhaps
+            var chiTiet = await _context.ChiTietPhieuNhap
                 .Include(ct => ct.BienTheSanPham)
                 .FirstOrDefaultAsync(ct => ct.MaPhieuNhap == maphieunhap && ct.MaBienThe == mabienthe);
 
@@ -83,7 +83,7 @@ namespace QLBoutique.Controllers
             bienThe.TonKho += chiTiet.SoLuong;
 
             // Thêm chi tiết phiếu nhập
-            _context.ChiTietPhieuNhaps.Add(chiTiet);
+            _context.ChiTietPhieuNhap.Add(chiTiet);
 
             try
             {
@@ -106,7 +106,7 @@ namespace QLBoutique.Controllers
             if (maphieunhap != chiTiet.MaPhieuNhap || mabienthe != chiTiet.MaBienThe)
                 return BadRequest("Khóa chính không khớp.");
 
-            var existingChiTiet = await _context.ChiTietPhieuNhaps
+            var existingChiTiet = await _context.ChiTietPhieuNhap
                 .FirstOrDefaultAsync(ct => ct.MaPhieuNhap == maphieunhap && ct.MaBienThe == mabienthe);
 
             if (existingChiTiet == null)
@@ -133,13 +133,13 @@ namespace QLBoutique.Controllers
         [HttpDelete("{maphieunhap}/{mabienthe}")]
         public async Task<IActionResult> DeleteChiTietPhieuNhap(string maphieunhap, string mabienthe)
         {
-            var chiTiet = await _context.ChiTietPhieuNhaps
+            var chiTiet = await _context.ChiTietPhieuNhap
                 .FirstOrDefaultAsync(ct => ct.MaPhieuNhap == maphieunhap && ct.MaBienThe == mabienthe);
 
             if (chiTiet == null)
                 return NotFound();
 
-            _context.ChiTietPhieuNhaps.Remove(chiTiet);
+            _context.ChiTietPhieuNhap.Remove(chiTiet);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -147,7 +147,7 @@ namespace QLBoutique.Controllers
 
         private bool ChiTietPhieuNhapExists(string maphieunhap, string mabienthe)
         {
-            return _context.ChiTietPhieuNhaps.Any(ct => ct.MaPhieuNhap == maphieunhap && ct.MaBienThe == mabienthe);
+            return _context.ChiTietPhieuNhap.Any(ct => ct.MaPhieuNhap == maphieunhap && ct.MaBienThe == mabienthe);
         }
     }
 }
