@@ -39,7 +39,7 @@ namespace QLBoutique.Model
         public int TrangThai { get; set; } = 1;
 
         [StringLength(200)]
-        public string GhiChu { get; set; }
+        public string? GhiChu { get; set; }
 
         [StringLength(20)]
         public string MaDiaChi { get; set; }

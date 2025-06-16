@@ -8,7 +8,7 @@
         public string MaDVVC { get; set; }
         public string? MaTT { get; set; }
         public string? MaKM { get; set; }
-        public string GhiChu { get; set; }
+        public string? GhiChu { get; set; }
 
         public List<SanPhamDatHangDto> SanPhams { get; set; }
     }

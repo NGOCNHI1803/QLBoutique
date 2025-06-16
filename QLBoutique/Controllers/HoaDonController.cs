@@ -261,38 +261,79 @@ namespace QLBoutique.Controllers
             var ptThanhToanList = await _context.PhuongThucThanhToan.ToListAsync();
             return Ok(ptThanhToanList);
         }
+        // Sinh mã hóa đơn mới: HD001, HD002,...
+        private async Task<string> GenerateMaHoaDonAsync()
+        {
+            var lastHD = await _context.HoaDon
+                .OrderByDescending(h => h.MaHoaDon)
+                .Select(h => h.MaHoaDon)
+                .FirstOrDefaultAsync();
+
+            int nextNumber = 1;
+            if (!string.IsNullOrEmpty(lastHD) && lastHD.StartsWith("HD"))
+            {
+                var numberPart = lastHD.Substring(2);
+                if (int.TryParse(numberPart, out int lastNumber))
+                {
+                    nextNumber = lastNumber + 1;
+                }
+            }
+            return $"HD{nextNumber:D3}"; // VD: HD001
+        }
+
+        // Sinh mã chi tiết hóa đơn mới: CTHD001, CTHD002,...
+        private async Task<string> GenerateMaChiTietHDAsync()
+        {
+            var lastCTHD = await _context.ChiTietHoaDon
+                .OrderByDescending(ct => ct.MaChiTietHD)
+                .Select(ct => ct.MaChiTietHD)
+                .FirstOrDefaultAsync();
+
+            int nextNumber = 1;
+            if (!string.IsNullOrEmpty(lastCTHD) && lastCTHD.StartsWith("CTHD"))
+            {
+                var numberPart = lastCTHD.Substring(4);
+                if (int.TryParse(numberPart, out int lastNumber))
+                {
+                    nextNumber = lastNumber + 1;
+                }
+            }
+            return $"CTHD{nextNumber:D3}";
+        }
+
         [HttpPost("dathang")]
         public async Task<IActionResult> DatHang([FromBody] DatHangRequest request)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            if (request == null || request.SanPhams == null || !request.SanPhams.Any())
+                return BadRequest("Dữ liệu đơn hàng không hợp lệ.");
 
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 var diaChi = await _context.DiaChiKhachHang
-                         .FirstOrDefaultAsync(dc => dc.MaDiaChi == request.MaDiaChi && dc.MaKH == request.MaKH);
+                    .FirstOrDefaultAsync(dc => dc.MaDiaChi == request.MaDiaChi && dc.MaKH == request.MaKH);
+
                 if (diaChi == null)
-                {
                     return BadRequest("Địa chỉ giao hàng không hợp lệ hoặc không thuộc khách hàng này.");
-                }
+
+                var donViVC = await _context.DonViVanChuyen
+                    .FirstOrDefaultAsync(x => x.MaDVVC == request.MaDVVC);
+
+                if (donViVC == null)
+                    return BadRequest("Đơn vị vận chuyển không hợp lệ.");
+
                 decimal tongTien = request.SanPhams.Sum(sp => sp.GiaBan * sp.SoLuong);
                 decimal tongGiamGia = request.SanPhams.Sum(sp => sp.GiamGia);
-                // Lấy phí vận chuyển từ bảng DonViVanChuyen
-                var donViVC = await _context.DonViVanChuyen.FirstOrDefaultAsync(x => x.MaDVVC == request.MaDVVC);
-                if (donViVC == null)
-                {
-                    return BadRequest("Đơn vị vận chuyển không hợp lệ.");
-                }
-
                 decimal phiVanChuyen = donViVC.PhiVanChuyen;
                 decimal thanhTien = tongTien - tongGiamGia + phiVanChuyen;
 
                 var hoaDon = new HoaDon
                 {
-                    MaHoaDon = "HD" + Guid.NewGuid().ToString("N").Substring(0, 10),
+                    MaHoaDon = await GenerateMaHoaDonAsync(),
                     MaKH = request.MaKH,
                     MaNV = request.MaNV,
                     NgayLap = DateTime.Now,
-                    MaKM = string.IsNullOrWhiteSpace(request.MaKM) ? null : request.MaKM,
+                    MaKM = request.MaKM,
                     MaDiaChi = request.MaDiaChi,
                     GhiChu = request.GhiChu,
                     TongTien = tongTien,
@@ -306,7 +347,6 @@ namespace QLBoutique.Controllers
                 _context.HoaDon.Add(hoaDon);
                 await _context.SaveChangesAsync();
 
-                
                 var gioHang = await _context.GioHang
                     .FirstOrDefaultAsync(g => g.MaKH == request.MaKH && g.TrangThai == 1);
 
@@ -315,6 +355,7 @@ namespace QLBoutique.Controllers
                     var bienThe = await _context.ChiTietSanPham.FindAsync(sp.MaBienThe);
                     if (bienThe == null || bienThe.TonKho < sp.SoLuong)
                     {
+                        await transaction.RollbackAsync();
                         return BadRequest($"Không đủ hàng cho biến thể {sp.MaBienThe}");
                     }
 
@@ -322,7 +363,7 @@ namespace QLBoutique.Controllers
 
                     var chiTiet = new ChiTietHoaDon
                     {
-                        MaChiTietHD = "CTHD" + Guid.NewGuid().ToString("N").Substring(0, 10),
+                        MaChiTietHD = await GenerateMaChiTietHDAsync(),
                         MaHD = hoaDon.MaHoaDon,
                         MaBienThe = sp.MaBienThe,
                         SoLuong = sp.SoLuong,
@@ -333,7 +374,6 @@ namespace QLBoutique.Controllers
 
                     _context.ChiTietHoaDon.Add(chiTiet);
 
-                    
                     if (gioHang != null)
                     {
                         var gioHangItem = await _context.ChiTietGioHang
@@ -349,15 +389,15 @@ namespace QLBoutique.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Ok(new { message = "Đặt hàng thành công", MaHD = hoaDon.MaHoaDon});
+                return Ok(new { message = "Đặt hàng thành công", MaHD = hoaDon.MaHoaDon });
             }
             catch (Exception ex)
-{
-    await transaction.RollbackAsync();
-    return StatusCode(500, $"Lỗi xử lý đơn hàng: {ex.Message} - {ex.InnerException?.Message}");
-}
-
+            {
+                await transaction.RollbackAsync();
+                return StatusCode(500, $"Lỗi xử lý đơn hàng: {ex.Message} - {ex.InnerException?.Message}");
+            }
         }
+
         // GET: api/HoaDon/chitiethoadon
         [HttpGet("chitiethoadon")]
         public async Task<ActionResult<IEnumerable<ChiTietHoaDon>>> GetAllChiTietHoaDon()
