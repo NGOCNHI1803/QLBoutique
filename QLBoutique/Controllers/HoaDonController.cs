@@ -333,7 +333,6 @@ namespace QLBoutique.Controllers
                     MaKH = request.MaKH,
                     MaNV = request.MaNV,
                     NgayLap = DateTime.Now,
-                    MaKM = request.MaKM,
                     MaDiaChi = request.MaDiaChi,
                     GhiChu = request.GhiChu,
                     TongTien = tongTien,
@@ -343,6 +342,18 @@ namespace QLBoutique.Controllers
                     MaDVVC = request.MaDVVC,
                     TrangThai = 1
                 };
+                if (!string.IsNullOrWhiteSpace(request.MaKM) && request.MaKM != "string")
+                {
+                    var khuyenMaiTonTai = await _context.KhuyenMai.AnyAsync(km => km.MaKM == request.MaKM);
+                    if (!khuyenMaiTonTai)
+                    {
+                        await transaction.RollbackAsync();
+                        return BadRequest($"Mã khuyến mãi '{request.MaKM}' không tồn tại.");
+                    }
+
+                    hoaDon.MaKM = request.MaKM;
+                }
+
 
                 _context.HoaDon.Add(hoaDon);
                 await _context.SaveChangesAsync();
@@ -397,6 +408,7 @@ namespace QLBoutique.Controllers
                 return StatusCode(500, $"Lỗi xử lý đơn hàng: {ex.Message} - {ex.InnerException?.Message}");
             }
         }
+
 
         // GET: api/HoaDon/chitiethoadon
         [HttpGet("chitiethoadon")]
