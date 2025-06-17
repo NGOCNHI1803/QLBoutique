@@ -129,47 +129,67 @@ namespace QLBoutique.Controllers
 
             return Ok(bienThe);
         }
+        private async Task<string> GenerateNewMaGioHangAsync()
+        {
+            var lastGioHang = await _context.GioHang
+                .OrderByDescending(g => g.MaGioHang)
+                .FirstOrDefaultAsync();
+
+            if (lastGioHang == null || string.IsNullOrEmpty(lastGioHang.MaGioHang) || !lastGioHang.MaGioHang.StartsWith("GH"))
+            {
+                return "GH001";
+            }
+
+            var so = lastGioHang.MaGioHang.Substring(2); // Lấy phần số, VD: "GH005" -> "005"
+            if (int.TryParse(so, out int soThuTu))
+            {
+                return $"GH{(soThuTu + 1):D3}"; // Tăng lên 1, giữ định dạng 3 chữ số
+            }
+
+            return "GH001"; // fallback nếu lỗi
+        }
         [HttpPost("addToCart")]
         public async Task<IActionResult> AddProductToCart([FromBody] AddToCartRequest request)
         {
-            if (request == null || string.IsNullOrEmpty(request.MaKhachHang) || string.IsNullOrEmpty(request.MaBienThe) || request.SoLuong < 1)
+            if (request == null || string.IsNullOrEmpty(request.MaKH) ||
+    string.IsNullOrEmpty(request.MaBienThe) || request.SoLuong < 1)
                 return BadRequest("Dữ liệu không hợp lệ.");
+
+            var maKH = request.MaKH;
 
             try
             {
                 // Bước 1: Tìm giỏ hàng còn hiệu lực của khách hàng
                 var gioHang = await _context.GioHang
-                    .FirstOrDefaultAsync(g => g.MaKH == request.MaKhachHang && g.TrangThai == 1);
+                    .FirstOrDefaultAsync(g => g.MaKH == maKH && g.TrangThai == 1);
 
                 // Bước 2: Nếu chưa có giỏ thì tạo mới
                 if (gioHang == null)
                 {
                     gioHang = new GioHang
                     {
-                        MaGioHang = Guid.NewGuid().ToString("N").Substring(0, 20), // tạo mã 20 ký tự
-                        MaKH = request.MaKhachHang,
+                        MaGioHang = await GenerateNewMaGioHangAsync(),
+                        MaKH = maKH,
                         NgayTao = DateTime.Now,
                         NgayCapNhat = DateTime.Now,
                         TrangThai = 1
                     };
 
                     _context.GioHang.Add(gioHang);
-                    await _context.SaveChangesAsync(); // Lưu để có mã giỏ hàng
+                    await _context.SaveChangesAsync();
                 }
 
-                // Bước 3: Kiểm tra biến thể sản phẩm đã có trong giỏ chưa
+                // Bước 3: Kiểm tra sản phẩm đã tồn tại chưa
                 var chiTiet = await _context.ChiTietGioHang
                     .FirstOrDefaultAsync(ct => ct.MaGioHang == gioHang.MaGioHang && ct.MaBienThe == request.MaBienThe);
 
                 if (chiTiet != null)
                 {
-                    // Cập nhật số lượng cộng dồn
                     chiTiet.SoLuong += request.SoLuong;
                     _context.Entry(chiTiet).State = EntityState.Modified;
                 }
                 else
                 {
-                    // Thêm mới chi tiết giỏ hàng
                     chiTiet = new ChiTietGioHang
                     {
                         MaGioHang = gioHang.MaGioHang,
@@ -179,7 +199,6 @@ namespace QLBoutique.Controllers
                     _context.ChiTietGioHang.Add(chiTiet);
                 }
 
-                // Cập nhật lại ngày cập nhật giỏ hàng
                 gioHang.NgayCapNhat = DateTime.Now;
                 _context.Entry(gioHang).State = EntityState.Modified;
 
@@ -201,7 +220,7 @@ namespace QLBoutique.Controllers
         // Model nhận request
         public class AddToCartRequest
         {
-            public string? MaKhachHang { get; set; }
+            public string? MaKH { get; set; }
             public string? MaBienThe { get; set; }
             public int SoLuong { get; set; }
         }
