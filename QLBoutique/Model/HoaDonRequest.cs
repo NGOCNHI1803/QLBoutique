@@ -12,6 +12,7 @@ public class HoaDonRequest
     public string MaTT { get; set; }
     public int TrangThai { get; set; }
     public string? GhiChu { get; set; }
+    public string? TrangThai_VanChuyen { get; set; }
 
     public List<ChiTietHoaDonDTO> ChiTietHoaDon { get; set; }
 }

@@ -28,6 +28,37 @@ namespace QLBoutique.Controllers
         {
             return await _context.HoaDon.ToListAsync();
         }
+        // GET: api/HoaDon/{maHoaDon}
+        [HttpGet("{maHoaDon}")]
+        public async Task<ActionResult<HoaDon>> GetByMaHoaDon(string maHoaDon)
+        {
+            var hoaDon = await _context.HoaDon
+                .Include(h => h.ChiTietHoaDons)
+                .FirstOrDefaultAsync(h => h.MaHoaDon == maHoaDon);
+
+            if (hoaDon == null) return NotFound();
+
+            var dto = new HoaDon
+            {
+                MaHoaDon = hoaDon.MaHoaDon,
+                MaKH = hoaDon.MaKH,
+                MaNV = hoaDon.MaNV,
+                NgayLap = hoaDon.NgayLap,
+                TongTien = hoaDon.TongTien,
+                GiamGia = hoaDon.GiamGia,
+                ThanhTien = hoaDon.ThanhTien,
+                MaKM = hoaDon.MaKM,
+                TrangThai = hoaDon.TrangThai,
+                GhiChu = hoaDon.GhiChu,
+                MaDiaChi = hoaDon.MaDiaChi,
+                MaTT = hoaDon.MaTT,
+                MaDVVC = hoaDon.MaDVVC,
+                TrangThai_VanChuyen = hoaDon.TrangThai_VanChuyen
+            };
+
+            return dto;
+        }
+
 
         /* Tạo hóa đơn cho winform*/
         [HttpPost]
@@ -63,7 +94,8 @@ namespace QLBoutique.Controllers
                     MaKM = request.MaKM,
                     MaTT = request.MaTT,
                     TrangThai = request.TrangThai,
-                    GhiChu = request.GhiChu
+                    GhiChu = request.GhiChu,
+                    TrangThai_VanChuyen = request.TrangThai_VanChuyen
                 };
 
                 _context.HoaDon.Add(hoaDon);
@@ -281,26 +313,29 @@ namespace QLBoutique.Controllers
             return $"HD{nextNumber:D3}"; // VD: HD001
         }
 
-        // Sinh mã chi tiết hóa đơn mới: CTHD001, CTHD002,...
-        private async Task<string> GenerateMaChiTietHDAsync()
+        // Sinh danh sách mã ChiTietHoaDon: CTHD001, CTHD002,...
+        private async Task<List<string>> GenerateDanhSachMaChiTietHDAsync(int soLuong)
         {
             var lastCTHD = await _context.ChiTietHoaDon
                 .OrderByDescending(ct => ct.MaChiTietHD)
                 .Select(ct => ct.MaChiTietHD)
                 .FirstOrDefaultAsync();
 
-            int nextNumber = 1;
+            int lastNumber = 0;
             if (!string.IsNullOrEmpty(lastCTHD) && lastCTHD.StartsWith("CTHD"))
             {
                 var numberPart = lastCTHD.Substring(4);
-                if (int.TryParse(numberPart, out int lastNumber))
-                {
-                    nextNumber = lastNumber + 1;
-                }
+                int.TryParse(numberPart, out lastNumber);
             }
-            return $"CTHD{nextNumber:D3}";
-        }
 
+            var danhSach = new List<string>();
+            for (int i = 1; i <= soLuong; i++)
+            {
+                danhSach.Add($"CTHD{(lastNumber + i):D3}");
+            }
+
+            return danhSach;
+        }
         [HttpPost("dathang")]
         public async Task<IActionResult> DatHang([FromBody] DatHangRequest request)
         {
@@ -345,10 +380,13 @@ namespace QLBoutique.Controllers
                 };
 
                 _context.HoaDon.Add(hoaDon);
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // Lưu Hóa đơn trước để lấy MaHD
 
                 var gioHang = await _context.GioHang
                     .FirstOrDefaultAsync(g => g.MaKH == request.MaKH && g.TrangThai == 1);
+
+                var danhSachMaCTHD = await GenerateDanhSachMaChiTietHDAsync(request.SanPhams.Count);
+                int index = 0;
 
                 foreach (var sp in request.SanPhams)
                 {
@@ -363,7 +401,7 @@ namespace QLBoutique.Controllers
 
                     var chiTiet = new ChiTietHoaDon
                     {
-                        MaChiTietHD = await GenerateMaChiTietHDAsync(),
+                        MaChiTietHD = danhSachMaCTHD[index++],
                         MaHD = hoaDon.MaHoaDon,
                         MaBienThe = sp.MaBienThe,
                         SoLuong = sp.SoLuong,
@@ -389,7 +427,7 @@ namespace QLBoutique.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                return Ok(new { message = "Đặt hàng thành công", MaHD = hoaDon.MaHoaDon });
+                return Ok(new { message = "Đặt hàng thành công", maHoaDon = hoaDon.MaHoaDon });
             }
             catch (Exception ex)
             {

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -40,6 +40,8 @@ namespace QLBoutique.Model
 
         [StringLength(200)]
         public string? GhiChu { get; set; }
+        [StringLength(50)]
+        public string? TrangThai_VanChuyen { get; set; } = "Chờ xác nhận";
 
         [StringLength(20)]
         public string MaDiaChi { get; set; }
