@@ -661,6 +661,10 @@ namespace QLBoutique.ClothingDbContext
                 entity.Property(e => e.TrangThai_VanChuyen)
                  .HasMaxLength(50);
 
+                entity.Property(e => e.NgayGiao)
+              .HasColumnName("NGAYGIAO")
+              .HasColumnType("datetime")
+              .IsRequired(false);
                 entity.Property(e => e.MaDiaChi)
                       .HasMaxLength(20);
 

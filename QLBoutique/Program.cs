@@ -5,6 +5,7 @@ using Microsoft.Extensions.FileProviders;
 using System.IO;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using QLBoutique.Services;
+using QLBoutique.Model;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,8 @@ builder.Services.AddDbContext<BoutiqueDBContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddSignalR();
+
 
 // Đăng ký EmailService
 builder.Services.AddScoped<IEmailService, EmailService>();
@@ -71,5 +74,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<HoaDonHub>("/hoadonhub");
+
 
 app.Run();
