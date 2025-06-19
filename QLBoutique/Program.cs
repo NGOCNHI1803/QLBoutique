@@ -17,6 +17,8 @@ builder.Services.AddDbContext<BoutiqueDBContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddMemoryCache();
+
 
 // Đăng ký EmailService
 builder.Services.AddScoped<IEmailService, EmailService>();

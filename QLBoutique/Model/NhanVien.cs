@@ -19,6 +19,8 @@ namespace QLBoutique.Model
         public virtual QuyenHan? Quyen { get; set; }
         public string? MaCV { get; set; }
         public virtual ChucVu? ChucVu { get; set; }
+        public DateTime ResetPasswordExpiry { get; internal set; }
+
     }
 }
 

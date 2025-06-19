@@ -51,7 +51,6 @@ namespace QLBoutique.Controllers
                 {
                     khachHangTheoSoDT.Email = khachHang.Email;
                     khachHangTheoSoDT.TenKH = khachHang.TenKH;
-                    khachHangTheoSoDT.DiaChi = khachHang.DiaChi;
                     khachHangTheoSoDT.NgaySinh = khachHang.NgaySinh;
                     khachHangTheoSoDT.GhiChu = string.IsNullOrEmpty(khachHang.GhiChu) ? "Khách hàng mới" : khachHang.GhiChu;
                     khachHangTheoSoDT.MaLoaiKH = string.IsNullOrEmpty(khachHang.MaLoaiKH) ? "KHM" : khachHang.MaLoaiKH;
