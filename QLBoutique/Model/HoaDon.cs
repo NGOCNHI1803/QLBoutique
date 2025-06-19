@@ -22,6 +22,7 @@ namespace QLBoutique.Model
         public string MaNV { get; set; }
 
         public DateTime NgayLap { get; set; } = DateTime.Now;
+        public DateTime? NgayGiao { get; set; }
 
         [Column("TONGTIEN")]
         public decimal TongTien { get; set; }

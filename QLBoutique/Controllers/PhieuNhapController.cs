@@ -74,35 +74,31 @@ namespace QLBoutique.Controllers
 
             return CreatedAtAction(nameof(GetPhieuNhap), new { id = phieuNhap.MaPhieuNhap }, phieuNhap);
         }
-
-        // PUT: api/PhieuNhap/{id}
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdatePhieuNhap(string id, [FromBody] PhieuNhap phieuNhap)
         {
             if (id != phieuNhap.MaPhieuNhap)
-            {
                 return BadRequest("Mã phiếu nhập không khớp.");
-            }
 
             var existingPhieuNhap = await _context.PhieuNhap
                 .Include(p => p.ChiTietPhieuNhaps)
                 .FirstOrDefaultAsync(p => p.MaPhieuNhap == id);
 
             if (existingPhieuNhap == null)
-            {
                 return NotFound();
-            }
 
-            // Cập nhật thông tin phiếu nhập
+            // 🔒 Chặn sửa nếu phiếu đã hoàn thành
+            if (existingPhieuNhap.TrangThai == 1)
+                return BadRequest("Không thể cập nhật phiếu đã hoàn thành.");
+
+            // Tiếp tục cập nhật
             existingPhieuNhap.MaNCC = phieuNhap.MaNCC;
             existingPhieuNhap.MaNV = phieuNhap.MaNV;
             existingPhieuNhap.GhiChu = phieuNhap.GhiChu;
             existingPhieuNhap.TrangThai = phieuNhap.TrangThai;
 
-            // Xóa chi tiết cũ
             _context.ChiTietPhieuNhap.RemoveRange(existingPhieuNhap.ChiTietPhieuNhaps);
 
-            // Thêm chi tiết mới
             if (phieuNhap.ChiTietPhieuNhaps != null)
             {
                 foreach (var ct in phieuNhap.ChiTietPhieuNhaps)
@@ -110,7 +106,6 @@ namespace QLBoutique.Controllers
                     ct.MaPhieuNhap = id;
                     _context.ChiTietPhieuNhap.Add(ct);
                 }
-
                 existingPhieuNhap.TongTien = phieuNhap.ChiTietPhieuNhaps.Sum(ct => ct.SoLuong * ct.Gia_Von);
             }
             else
@@ -125,16 +120,13 @@ namespace QLBoutique.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!_context.PhieuNhap.Any(e => e.MaPhieuNhap == id))
-                {
                     return NotFound();
-                }
                 throw;
             }
 
             return NoContent();
         }
 
-        // DELETE: api/PhieuNhap/{id}
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeletePhieuNhap(string id)
         {
@@ -143,11 +135,12 @@ namespace QLBoutique.Controllers
                 .FirstOrDefaultAsync(p => p.MaPhieuNhap == id);
 
             if (phieuNhap == null)
-            {
                 return NotFound();
-            }
 
-            // Xóa chi tiết trước để tránh FK violation
+            // 🔒 Chặn xóa nếu phiếu đã hoàn thành
+            if (phieuNhap.TrangThai == 1)
+                return BadRequest("Không thể xóa phiếu đã hoàn thành.");
+
             if (phieuNhap.ChiTietPhieuNhaps != null)
             {
                 _context.ChiTietPhieuNhap.RemoveRange(phieuNhap.ChiTietPhieuNhaps);

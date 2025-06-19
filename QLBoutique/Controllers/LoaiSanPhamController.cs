@@ -157,5 +157,27 @@ namespace QLBoutique.Controllers
         {
             return _context.LoaiSanPham.Any(e => e.MaLoai == id);
         }
+
+        // GET: api/LoaiSanPham/flat
+        [HttpGet("flat")]
+        public async Task<ActionResult<IEnumerable<object>>> GetLoaiSanPhamPhang()
+        {
+            var danhMuc = await _context.LoaiSanPham.ToListAsync();
+
+            var result = from loai in danhMuc
+                         join cha in danhMuc on loai.ParentId equals cha.MaLoai into gj
+                         from cha in gj.DefaultIfEmpty()
+                         select new
+                         {
+                             MaLoai = loai.MaLoai,
+                             TenLoai = loai.TenLoai,
+                             XuatSu = loai.XuatSu,
+                             ParentId = loai.ParentId,
+                             //TenLoaiCha = cha != null ? cha.TenLoai : null
+                         };
+
+            return Ok(result);
+        }
+
     }
 }
